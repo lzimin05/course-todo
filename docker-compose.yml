@@ -1,0 +1,56 @@
+services:
+  todo-app:
+    build: .
+    container_name: todo_app
+    ports:
+      - "8080:8080" 
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - todo-network
+    command: sh -c "./migrate && ./main"
+
+  db:
+    image: postgres:15-alpine
+    container_name: todo_db
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: todo_db
+    ports:
+      - "5433:5432"
+    volumes:
+      - todo_data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d todo_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - todo-network
+  
+  auth_redis:
+    image: redis:alpine
+    command: redis-server --bind 0.0.0.0 --port 6380 --requirepass password
+    ports:
+      - "6380:6380"
+    volumes:
+      - auth_redis_data:/data
+    environment:
+      REDIS_PASSWORD: password
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -h localhost -p 6380 -a password ping | grep PONG"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - todo-network
+
+networks:
+  todo-network:
+    driver: bridge
+
+volumes:
+  todo_data:
+  auth_redis_data:
