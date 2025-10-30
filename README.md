@@ -65,26 +65,7 @@ git clone https://github.com/lzimin05/course-todo.git
 cd course-todo
 
 # Запустите приложение
-docker-compose up -d
-
-# Проверьте статус
-curl http://localhost:8080/api/auth/register
-```
-
-### Локальная разработка
-
-```bash
-# Установите зависимости
-go mod download
-
-# Запустите PostgreSQL и Redis (или используйте Docker)
-docker-compose up -d db auth_redis
-
-# Выполните миграции
-go run cmd/migrations/main.go
-
-# Запустите приложение
-go run cmd/app/main.go
+make start
 ```
 
 ## 📡 API Endpoints
@@ -133,71 +114,9 @@ AUTH_REDIS_HOST: *          # Хост Redis для аутентификации
 AUTH_REDIS_PORT: *          # Порт Redis
 ```
 
-## 🗄️ Модели данных
-
-### Задача (Task)
-```go
-type Task struct {
-    ID          uuid.UUID `json:"id"`
-    UserID      uuid.UUID `json:"user_id"`
-    Title       string    `json:"title"`
-    Description string    `json:"description"`
-    Importance  int       `json:"importance"`    // 1-5
-    Deadline    time.Time `json:"deadline"`
-    CreatedAt   time.Time `json:"created_at"`
-    Status      string    `json:"status"`       // waiting, in_progress, completed
-}
-```
-
-### Заметка (Note)
-```go
-type Note struct {
-    ID          uuid.UUID `json:"id"`
-    UserID      uuid.UUID `json:"user_id"`
-    Name        string    `json:"name"`
-    Description string    `json:"description"`
-    CreatedAt   time.Time `json:"created_at"`
-}
-```
-
-## 🧪 Разработка
-
 ### Команды Make
 
 ```bash
-make build          # Сборка приложения
-make run            # Запуск приложения
-make test           # Запуск тестов
-make docker-build   # Сборка Docker образа
-make migrate-up     # Применить миграции
-make migrate-down   # Откатить миграции
+make start
+make clear
 ```
-
-### Добавление новых миграций
-
-```bash
-# Создать новую миграцию
-migrate create -ext sql -dir db/migrations -seq название_миграции
-```
-
-## 🤝 Contributing
-
-1. Форкните репозиторий
-2. Создайте ветку для новой функции (`git checkout -b feature/amazing-feature`)
-3. Зафиксируйте изменения (`git commit -m 'Add amazing feature'`)
-4. Отправьте в ветку (`git push origin feature/amazing-feature`)
-5. Создайте Pull Request
-
-## 📄 Лицензия
-
-Этот проект распространяется под лицензией MIT. Подробности в файле [LICENSE](LICENSE).
-
-## 📞 Контакты
-
-- **Автор**: [lzimin05](https://github.com/lzimin05)
-- **Email**: your.email@example.com
-- **Проект**: [https://github.com/lzimin05/course-todo](https://github.com/lzimin05/course-todo)
-
----
-
-⭐ Если проект был полезен, поставьте звезду!
