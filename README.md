@@ -88,7 +88,7 @@ POST /api/todo/create           # Создать новую задачу
 GET  /api/todo/all             # Получить все задачи пользователя
 PUT  /api/todo/{id}/edit       # Редактировать задачу
 PATCH /api/todo/{id}/edit      # Изменить статус задачи
-DELETE /api/todo/{id}/         # Удалить задачу
+DELETE /api/todo/{id}         # Удалить задачу
 ```
 
 ### Заметки
