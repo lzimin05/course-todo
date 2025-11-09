@@ -15,8 +15,8 @@ import (
 )
 
 type INoteUsecase interface {
-	GetAllNotes(ctx context.Context) ([]dto.NoteDTO, error)
-	CreateNote(ctx context.Context, req dto.CreateOrUpdateNote) (uuid.UUID, error)
+	GetAllNotes(ctx context.Context) ([]*dto.NoteDTO, error)
+	CreateNote(ctx context.Context, req dto.CreateOrUpdateNote) (*dto.CreateNoteDTO, error)
 	UpdateNote(ctx context.Context, noteID uuid.UUID, req dto.CreateOrUpdateNote) error
 	DeleteNote(ctx context.Context, noteID uuid.UUID) error
 }
@@ -33,6 +33,17 @@ func NewNoteHandler(uc INoteUsecase, conf *config.Config) *NoteHandler {
 	}
 }
 
+// GetAllNotes получает все заметки
+// @Summary      Получить все заметки
+// @Description  Возвращает список всех заметок пользователя
+// @Tags         notes
+// @Produce      json
+// @Success      200  {array}  dto.NoteDTO "Список заметок"
+// @Failure      400  {object} dto.ErrorResponse "Неверный запрос"
+// @Failure      401  {object} dto.ErrorResponse "Пользователь не авторизован"
+// @Failure      500  {object} dto.ErrorResponse "Внутренняя ошибка сервера"
+// @Security     BearerAuth
+// @Router       /notes/all [get]
 func (h *NoteHandler) GetAllNotes(w http.ResponseWriter, r *http.Request) {
 	const op = "NoteHandler.GetAllNotes"
 	logger := logctx.GetLogger(r.Context()).WithField("op", op)
@@ -52,6 +63,19 @@ func (h *NoteHandler) GetAllNotes(w http.ResponseWriter, r *http.Request) {
 	response.SendJSONResponse(r.Context(), w, http.StatusOK, notes)
 }
 
+// CreateNote создает новую заметку
+// @Summary      Создать новую заметку
+// @Description  Создает новую заметку для пользователя
+// @Tags         notes
+// @Accept       json
+// @Produce      json
+// @Param        note  body  dto.CreateOrUpdateNote  true  "Данные для создания заметки"
+// @Success      201  {object} dto.CreateNoteDTO "ID созданной заметки"
+// @Failure      400  {object} dto.ErrorResponse "Неверный запрос"
+// @Failure      401  {object} dto.ErrorResponse "Пользователь не авторизован"
+// @Failure      500  {object} dto.ErrorResponse "Внутренняя ошибка сервера"
+// @Security     BearerAuth
+// @Router       /notes/create [post]
 func (h *NoteHandler) CreateNote(w http.ResponseWriter, r *http.Request) {
 	const op = "NoteHandler.CreateNote"
 	logger := logctx.GetLogger(r.Context()).WithField("op", op)
@@ -75,11 +99,24 @@ func (h *NoteHandler) CreateNote(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response.SendJSONResponse(r.Context(), w, http.StatusCreated, map[string]interface{}{
-		"id": noteID,
-	})
+	response.SendJSONResponse(r.Context(), w, http.StatusCreated, noteID)
 }
 
+// UpdateNote обновляет заметку
+// @Summary      Обновить заметку
+// @Description  Обновляет существующую заметку пользователя
+// @Tags         notes
+// @Accept       json
+// @Produce      json
+// @Param        noteId  path  string  true  "ID заметки"
+// @Param        note    body  dto.CreateOrUpdateNote  true  "Данные для обновления заметки"
+// @Success      204  "Заметка успешно обновлена"
+// @Failure      400  {object} dto.ErrorResponse "Неверный запрос"
+// @Failure      401  {object} dto.ErrorResponse "Пользователь не авторизован"
+// @Failure      404  {object} dto.ErrorResponse "Заметка не найдена"
+// @Failure      500  {object} dto.ErrorResponse "Внутренняя ошибка сервера"
+// @Security     BearerAuth
+// @Router       /notes/{noteId}/edit [put]
 func (h *NoteHandler) UpdateNote(w http.ResponseWriter, r *http.Request) {
 	const op = "NoteHandler.UpdateNote"
 	logger := logctx.GetLogger(r.Context()).WithField("op", op)
@@ -115,6 +152,19 @@ func (h *NoteHandler) UpdateNote(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
+// DeleteNote удаляет заметку
+// @Summary      Удалить заметку
+// @Description  Удаляет существующую заметку пользователя
+// @Tags         notes
+// @Produce      json
+// @Param        noteId  path  string  true  "ID заметки"
+// @Success      204  "Заметка успешно удалена"
+// @Failure      400  {object} dto.ErrorResponse "Неверный запрос"
+// @Failure      401  {object} dto.ErrorResponse "Пользователь не авторизован"
+// @Failure      404  {object} dto.ErrorResponse "Заметка не найдена"
+// @Failure      500  {object} dto.ErrorResponse "Внутренняя ошибка сервера"
+// @Security     BearerAuth
+// @Router       /notes/{noteId} [delete]
 func (h *NoteHandler) DeleteNote(w http.ResponseWriter, r *http.Request) {
 	const op = "NoteHandler.DeleteNote"
 	logger := logctx.GetLogger(r.Context()).WithField("op", op)

@@ -7,15 +7,15 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	models "github.com/lzimin05/course-todo/internal/models/note"
-	errs "github.com/lzimin05/course-todo/internal/models/errs"
-	"github.com/lzimin05/course-todo/internal/transport/middleware/logctx"
 	"github.com/lib/pq"
+	errs "github.com/lzimin05/course-todo/internal/models/errs"
+	models "github.com/lzimin05/course-todo/internal/models/note"
+	"github.com/lzimin05/course-todo/internal/transport/middleware/logctx"
 )
 
 const (
 	getAllNotesQuery = `
-		SELECT id, name, description 
+		SELECT id, user_id, name, description, created_at
 		FROM todo.note 
 		WHERE user_id = $1`
 
@@ -57,7 +57,7 @@ func (r *NoteRepository) GetAllNotes(ctx context.Context, userID uuid.UUID) ([]m
 	var notes []models.Note
 	for rows.Next() {
 		var n models.Note
-		err := rows.Scan(&n.ID, &n.Name, &n.Description)
+		err := rows.Scan(&n.ID, &n.UserID, &n.Name, &n.Description, &n.CreatedAt)
 		if err != nil {
 			logger.WithError(err).Error("failed to scan note")
 			return nil, fmt.Errorf("%s: %w", op, err)

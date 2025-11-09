@@ -42,20 +42,10 @@ const (
 	)`
 )
 
-func (r *TaskRepository) CreateTask(ctx context.Context, userID uuid.UUID, title, description string, importance int, deadline, createdAt time.Time, status string) (*models.Task, error) {
+func (r *TaskRepository) CreateTask(ctx context.Context, task *models.Task) (*models.Task, error) {
 	const op = "TaskRepository.CreateTask"
 	logger := logctx.GetLogger(ctx).WithField("op", op).
-		WithField("title", title)
-	task := &models.Task{
-		ID:          uuid.New(),
-		UserID:      userID,
-		Title:       title,
-		Description: description,
-		Importance:  importance,
-		Deadline:    deadline,
-		CreatedAt:   createdAt,
-		Status:      status,
-	}
+		WithField("title", task.Title)
 
 	err := r.db.QueryRowContext(ctx, CreateTaskQuery,
 		task.ID, task.UserID, task.Title, task.Description, task.Importance, task.Status, task.CreatedAt, task.Deadline).

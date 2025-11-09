@@ -44,6 +44,7 @@ type App struct {
 func NewApp(conf *config.Config) (*App, error) {
 	logger := logrus.New()
 	logger.SetFormatter(&logrus.JSONFormatter{})
+	logger.SetLevel(logrus.WarnLevel)
 
 	// Подключение к БД
 	dbConnStr, err := repository.GetConnectionString(conf.DBConfig)
@@ -57,7 +58,7 @@ func NewApp(conf *config.Config) (*App, error) {
 	}
 	config.ConfigureDB(db, conf.DBConfig)
 
-	redisAuthClient, err := redis.NewClient(conf.AuthRedisConfig)
+	redisAuthClient, err := redis.NewClient(conf.RedisConfig)
 	if err != nil {
 		logger.Fatalf("redis auth connection error: %v", err)
 	}
@@ -118,7 +119,7 @@ func NewApp(conf *config.Config) (*App, error) {
 		taskRouter.Handle("/{taskId}/edit",
 			middleware.AuthMiddleware(tokenator)(http.HandlerFunc(taskHandler.UpdateTaskStatus)),
 		).Methods(http.MethodPatch)
-		taskRouter.Handle("/{taskId}/",
+		taskRouter.Handle("/{taskId}",
 			middleware.AuthMiddleware(tokenator)(http.HandlerFunc(taskHandler.DeleteTask)),
 		).Methods(http.MethodDelete)
 	}

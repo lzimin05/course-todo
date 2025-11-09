@@ -101,22 +101,55 @@ DELETE /api/notes/{id}         # Удалить заметку
 
 ## 🔧 Конфигурация
 
-Основные параметры настраиваются в `config.yml`:
+### Настройка окружения
 
-```yaml
-SERVER_PORT: *              # Порт веб-сервера
-JWT_SIGNATURE: *            # Секретный ключ для JWT
-JWT_TOKEN_LIFESPAN: *       # Время жизни токена
-POSTGRES_HOST: *            # Хост PostgreSQL
-POSTGRES_PORT: *            # Порт PostgreSQL
-POSTGRES_DB: *              # Имя базы данных
-AUTH_REDIS_HOST: *          # Хост Redis для аутентификации
-AUTH_REDIS_PORT: *          # Порт Redis
-```
-
-### Команды Make
+Перед первым запуском необходимо сгенерировать файл `.env` с настройками:
 
 ```bash
+make create-env
+```
+Эта команда создаст файл .env на основе настроек по умолчанию из config.yml.
+
+### Изменение настроек
+Если нужно изменить настройки, редактируйте файл .env:
+```bash
+nano .env
+```
+
+### Важные настройки для изменения в .env:
+```env
+JWT_SIGNATURE=your_secure_jwt_secret_here      # Секрет для JWT токенов
+POSTGRES_PASSWORD=your_secure_db_password      # Пароль PostgreSQL  
+AUTH_REDIS_PASSWORD=your_secure_redis_password # Пароль Redis
+```
+
+### Настройки по умолчанию (из config.yml):
+```yml
+SERVER_PORT: 8080
+
+POSTGRES_USER: user
+POSTGRES_PASSWORD: password
+POSTGRES_DB: todo_db
+POSTGRES_PORT: 5432
+POSTGRES_HOST: db
+
+MIGRATIONS_PATH: file://db/migrations
+
+JWT_TOKEN_LIFESPAN: 24h
+JWT_SIGNATURE: my_secret_key
+
+AUTH_REDIS_HOST: auth_redis
+AUTH_REDIS_PORT: 6380
+AUTH_REDIS_PASSWORD: password
+AUTH_REDIS_DB: 0
+```
+
+## 🚀 Команды Make
+
+```bash
+make create-env
+make deps
+make swagger
 make start
 make clear
 ```

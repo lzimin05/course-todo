@@ -2,10 +2,11 @@ package usecase
 
 import (
 	"context"
+	"time"
 
 	"github.com/google/uuid"
-	models "github.com/lzimin05/course-todo/internal/models/note"
 	errs "github.com/lzimin05/course-todo/internal/models/errs"
+	models "github.com/lzimin05/course-todo/internal/models/note"
 	dto "github.com/lzimin05/course-todo/internal/transport/dto/note"
 	"github.com/lzimin05/course-todo/internal/transport/middleware/logctx"
 	"github.com/lzimin05/course-todo/internal/usecase/helpers"
@@ -28,7 +29,7 @@ func NewNoteUsecase(repo INoteRepository) *NoteUsecase {
 	}
 }
 
-func (u *NoteUsecase) GetAllNotes(ctx context.Context) ([]dto.NoteDTO, error) {
+func (u *NoteUsecase) GetAllNotes(ctx context.Context) ([]*dto.NoteDTO, error) {
 	const op = "NoteUsecase.GetAllNotes"
 	logger := logctx.GetLogger(ctx).WithField("op", op)
 
@@ -38,46 +39,50 @@ func (u *NoteUsecase) GetAllNotes(ctx context.Context) ([]dto.NoteDTO, error) {
 		return nil, err
 	}
 
-	notes, err := u.repo.GetAllNotes(ctx, userID)
+	notesmodel, err := u.repo.GetAllNotes(ctx, userID)
 	if err != nil {
 		logger.WithError(err).Error("failed to get notes from repository")
 		return nil, err
 	}
 
-	var notesDTO []dto.NoteDTO
-	for _, n := range notes {
-		notesDTO = append(notesDTO, dto.NoteDTO{
-			ID:          n.ID,
-			Name:        n.Name,
-			Description: n.Description,
-		})
+	notesDTO := make([]*dto.NoteDTO, len(notesmodel))
+	for i, notemodel := range notesmodel {
+		notesDTO[i] = &dto.NoteDTO{
+			ID:          notemodel.ID,
+			UserID:      notemodel.UserID,
+			Name:        notemodel.Name,
+			Description: notemodel.Description,
+			CreatedAt:   notemodel.CreatedAt.Truncate(time.Second),
+		}
 	}
 
 	return notesDTO, nil
 }
 
-func (u *NoteUsecase) CreateNote(ctx context.Context, req dto.CreateOrUpdateNote) (uuid.UUID, error) {
+func (u *NoteUsecase) CreateNote(ctx context.Context, req dto.CreateOrUpdateNote) (*dto.CreateNoteDTO, error) {
 	const op = "NoteUsecase.CreateNote"
 	logger := logctx.GetLogger(ctx).WithField("op", op)
 
 	userID, err := helpers.GetUserIDFromContext(ctx)
 	if err != nil {
 		logger.WithError(err).Error("invalid user ID format")
-		return uuid.Nil, err
+		return nil, err
 	}
 
 	if req.Name == "" {
 		logger.Warn("empty note name")
-		return uuid.Nil, errs.ErrEmptyNoteName
+		return nil, errs.ErrEmptyNoteName
 	}
 
 	noteID, err := u.repo.CreateNote(ctx, userID, req.Name, req.Description)
 	if err != nil {
 		logger.WithError(err).Error("failed to create note in repository")
-		return uuid.Nil, err
+		return nil, err
 	}
 
-	return noteID, nil
+	return &dto.CreateNoteDTO{
+		ID: noteID,
+	}, nil
 }
 
 func (u *NoteUsecase) UpdateNote(ctx context.Context, noteID uuid.UUID, req dto.CreateOrUpdateNote) error {

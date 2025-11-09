@@ -8,9 +8,6 @@ import (
 	"github.com/lzimin05/course-todo/internal/transport/jwt"
 )
 
-// Ключи для хранения в контексте
-type contextKey string
-
 // AuthMiddleware создает middleware для проверки аутентификации
 func AuthMiddleware(tokenator *jwt.Tokenator) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {

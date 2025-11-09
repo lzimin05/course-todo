@@ -7,6 +7,7 @@ import (
 
 var (
 	ErrInvalidToken       = errors.New("invalid token")
+	ErrInvaliidRequest    = errors.New("invalid request")
 	ErrNotFound           = errors.New("not found")
 	ErrInvalidID          = errors.New("invalid id format")
 	ErrInvalidCredentials = errors.New("invalid credentials")
