@@ -63,6 +63,16 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	response.SendJSONResponse(r.Context(), w, http.StatusOK, respTok)
 }
 
+// Register регистрирует нового пользователя
+// @Summary      Регистрация пользователя
+// @Description  Регистрирует нового пользователя в системе и создает сессию
+// @Tags         auth
+// @Accept       json
+// @Produce      json
+// @Param        user  body  dto.RegisterRequest  true  "Данные для регистрации"
+// @Success      201  "Пользователь успешно зарегистрирован"
+// @Failure      400  "Ошибки регистрации"
+// @Router       /auth/register [post]
 func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 	const op = "AuthHandler.Register"
 	logger := logctx.GetLogger(r.Context()).WithField("op", op)
@@ -93,9 +103,7 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 		Path:     "/",
 	})
 
-	respTok := dto.TokenResponse{Token: token}
-
-	response.SendJSONResponse(r.Context(), w, http.StatusCreated, respTok)
+	response.SendJSONResponse(r.Context(), w, http.StatusCreated, nil)
 }
 
 func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {

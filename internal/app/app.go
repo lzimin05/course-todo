@@ -7,6 +7,9 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/lzimin05/course-todo/config"
+	_ "github.com/lzimin05/course-todo/docs"
+	httpSwagger "github.com/swaggo/http-swagger"
+
 	"github.com/lzimin05/course-todo/internal/infrastructure/redis"
 	"github.com/lzimin05/course-todo/internal/infrastructure/repository"
 	authrepo "github.com/lzimin05/course-todo/internal/infrastructure/repository/auth"
@@ -138,6 +141,9 @@ func NewApp(conf *config.Config) (*App, error) {
 			middleware.AuthMiddleware(tokenator)(http.HandlerFunc(noteHandler.DeleteNote)),
 		).Methods(http.MethodDelete)
 	}
+
+	// Swagger
+	router.PathPrefix("/swagger/").Handler(httpSwagger.WrapHandler)
 
 	return &App{
 		conf:   conf,

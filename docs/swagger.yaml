@@ -1,0 +1,45 @@
+basePath: /api
+definitions:
+  dto.RegisterRequest:
+    properties:
+      email:
+        type: string
+      login:
+        type: string
+      password:
+        type: string
+      username:
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact:
+    name: '@ZiminLeonid'
+    url: https://github.com/lzimin05/course-todo
+  description: API сервер для планирования задач
+  title: Course by Leonid Zimin
+  version: "1.0"
+paths:
+  /auth/register:
+    post:
+      consumes:
+      - application/json
+      description: Регистрирует нового пользователя в системе и создает сессию
+      parameters:
+      - description: Данные для регистрации
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/dto.RegisterRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Пользователь успешно зарегистрирован
+        "400":
+          description: Ошибки регистрации
+      summary: Регистрация пользователя
+      tags:
+      - auth
+swagger: "2.0"
