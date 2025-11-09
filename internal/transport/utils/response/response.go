@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/lzimin05/course-todo/internal/transport/dto"
+	"github.com/lzimin05/course-todo/internal/transport/dto/utils"
 	"github.com/lzimin05/course-todo/internal/transport/middleware/logctx"
 )
 

@@ -3,8 +3,8 @@ package main
 import (
 	"log"
 
-	_ "github.com/lzimin05/course-todo/docs"
 	"github.com/lzimin05/course-todo/config"
+	_ "github.com/lzimin05/course-todo/docs"
 	"github.com/lzimin05/course-todo/internal/app"
 )
 
@@ -17,6 +17,10 @@ import (
 
 // @host      localhost:8080
 // @BasePath  /api
+
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
 
 func main() {
 	conf, err := config.NewConfig()

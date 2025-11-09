@@ -18,7 +18,7 @@ type UserUsecase struct {
 	repo IUserRepository
 }
 
-func New(repo IUserRepository) *UserUsecase{
+func New(repo IUserRepository) *UserUsecase {
 	return &UserUsecase{
 		repo: repo,
 	}
@@ -41,9 +41,10 @@ func (u *UserUsecase) GetMe(ctx context.Context) (*dto.UserDTO, error) {
 	}
 
 	userDTO := &dto.UserDTO{
-		Email: user.Email,
+		ID:       user.ID,
+		Login:    user.Login,
+		Email:    user.Email,
 		Username: user.Username,
-		Login: user.Login,
 	}
 
 	return userDTO, nil

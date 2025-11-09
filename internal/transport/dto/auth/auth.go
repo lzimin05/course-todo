@@ -15,7 +15,3 @@ type RegisterRequest struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
 }
-
-type ErrorResponse struct {
-	Message string `json:"message"`
-}

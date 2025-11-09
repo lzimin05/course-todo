@@ -8,10 +8,12 @@ import (
 	"github.com/lzimin05/course-todo/config"
 	"github.com/lzimin05/course-todo/internal/models/domains"
 	errs "github.com/lzimin05/course-todo/internal/models/errs"
-	"github.com/lzimin05/course-todo/internal/transport/dto"
+	models "github.com/lzimin05/course-todo/internal/models/errs"
+	dto "github.com/lzimin05/course-todo/internal/transport/dto/auth"
 	"github.com/lzimin05/course-todo/internal/transport/middleware/logctx"
 	"github.com/lzimin05/course-todo/internal/transport/utils/cookie"
 	response "github.com/lzimin05/course-todo/internal/transport/utils/response"
+	validation "github.com/lzimin05/course-todo/internal/transport/utils/validation/auth"
 )
 
 //go:generate mockgen -source=auth.go -destination=../../usecase/mocks/auth_usecase_mock.go -package=mocks AuthUsecase
@@ -33,6 +35,17 @@ func New(uc AuthUsecase, cfg *config.Config) *AuthHandler {
 	}
 }
 
+// Login авторизует пользователя в системе
+// @Summary      Авторизация пользователя
+// @Description  Авторизует пользователя по email/логину и паролю
+// @Tags         auth
+// @Accept       json
+// @Produce      json
+// @Param        credentials  body  dto.LoginRequest  true  "Данные для авторизации"
+// @Success      200  "Успешная авторизация"
+// @Failure      400  {object} dto.ErrorResponse "Неверный запрос"
+// @Failure      401  {object} dto.ErrorResponse "Неверные учетные данные"
+// @Router       /auth/login [post]
 func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	const op = "AuthHandler.Login"
 	logger := logctx.GetLogger(r.Context()).WithField("op", op)
@@ -40,7 +53,7 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	var req dto.LoginRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		logger.WithError(err).Warn("failed to decode login request")
-		response.SendError(r.Context(), w, http.StatusBadRequest, "Invalid request")
+		response.SendError(r.Context(), w, http.StatusBadRequest, models.ErrInvaliidRequest.Error())
 		return
 	}
 
@@ -58,20 +71,19 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		Path:     "/",
 	})
 
-	respTok := dto.TokenResponse{Token: token}
-
-	response.SendJSONResponse(r.Context(), w, http.StatusOK, respTok)
+	response.SendJSONResponse(r.Context(), w, http.StatusOK, nil)
 }
 
 // Register регистрирует нового пользователя
 // @Summary      Регистрация пользователя
-// @Description  Регистрирует нового пользователя в системе и создает сессию
+// @Description  Регистрирует нового пользователя в системе
 // @Tags         auth
 // @Accept       json
 // @Produce      json
 // @Param        user  body  dto.RegisterRequest  true  "Данные для регистрации"
 // @Success      201  "Пользователь успешно зарегистрирован"
-// @Failure      400  "Ошибки регистрации"
+// @Failure      400  {object} dto.ErrorResponse "Неверный запрос"
+// @Failure      409  {object} dto.ErrorResponse "Пользователь с таким логином или email уже существует"
 // @Router       /auth/register [post]
 func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 	const op = "AuthHandler.Register"
@@ -81,6 +93,12 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		logger.WithError(err).Warn("failed to decode registration request")
 		response.SendError(r.Context(), w, http.StatusBadRequest, "Invalid request")
+		return
+	}
+
+	if err := validation.ValidateRegisterRequest(req); err != nil {
+		logger.WithError(err).Warn("validation failed: ", err.Error())
+		response.SendError(r.Context(), w, http.StatusBadRequest, err.Error())
 		return
 	}
 
@@ -106,6 +124,16 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 	response.SendJSONResponse(r.Context(), w, http.StatusCreated, nil)
 }
 
+// Logout завершает сессию пользователя
+// @Summary      Выход из системы
+// @Description  Завершает сессию пользователя и удаляет токен
+// @Tags         auth
+// @Produce      json
+// @Success      200  "Успешный выход из системы"
+// @Failure      401  {object} dto.ErrorResponse "JWT токен обязателен"
+// @Failure      500  {object} dto.ErrorResponse "Внутренняя ошибка сервера"
+// @Security     BearerAuth
+// @Router       /auth/logout [post]
 func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
 	const op = "AuthHandler.Logout"
 	logger := logctx.GetLogger(r.Context()).WithField("op", op)

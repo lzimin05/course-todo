@@ -15,17 +15,27 @@ type IUserUsecase interface {
 }
 
 type UserHandler struct {
-	uc IUserUsecase
+	uc     IUserUsecase
 	config *config.Config
 }
 
 func New(uc IUserUsecase, conf *config.Config) *UserHandler {
 	return &UserHandler{
-		uc: uc,
+		uc:     uc,
 		config: conf,
 	}
 }
 
+// GetMe возвращает информацию о текущем пользователе
+// @Summary      Получить информацию о текущем пользователе
+// @Description  Возвращает информацию о текущем авторизованном пользователе
+// @Tags         user
+// @Produce      json
+// @Success      200  {object} dto.UserDTO "Информация о пользователе"
+// @Failure      400  {object} dto.ErrorResponse "Неверный запрос"
+// @Failure      401  {object} dto.ErrorResponse "Пользователь не авторизован"
+// @Security     BearerAuth
+// @Router       /users/me [get]
 func (h *UserHandler) GetMe(w http.ResponseWriter, r *http.Request) {
 	const op = "UserHandler.GetMe"
 	logger := logctx.GetLogger(r.Context()).WithField("op", op)

@@ -1,5 +1,56 @@
 basePath: /api
 definitions:
+  dto.CreateNoteDTO:
+    properties:
+      id:
+        type: string
+    type: object
+  dto.CreateOrUpdateNote:
+    properties:
+      description:
+        type: string
+      name:
+        type: string
+    type: object
+  dto.ErrorResponse:
+    properties:
+      message:
+        type: string
+    type: object
+  dto.LoginRequest:
+    properties:
+      emailorlogin:
+        type: string
+      password:
+        type: string
+    type: object
+  dto.NoteDTO:
+    properties:
+      created_at:
+        type: string
+      description:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      user_id:
+        type: string
+    type: object
+  dto.PostTaskDTO:
+    properties:
+      deadline:
+        type: string
+      description:
+        type: string
+      importance:
+        type: integer
+      title:
+        type: string
+    required:
+    - importance
+    - title
+    type: object
   dto.RegisterRequest:
     properties:
       email:
@@ -7,6 +58,39 @@ definitions:
       login:
         type: string
       password:
+        type: string
+      username:
+        type: string
+    type: object
+  dto.TaskDTO:
+    properties:
+      created_at:
+        type: string
+      deadline:
+        type: string
+      description:
+        type: string
+      id:
+        type: string
+      importance:
+        type: integer
+      status:
+        type: string
+      title:
+        type: string
+      user_id:
+        type: string
+    required:
+    - importance
+    - title
+    type: object
+  dto.UserDTO:
+    properties:
+      email:
+        type: string
+      id:
+        type: string
+      login:
         type: string
       username:
         type: string
@@ -20,11 +104,60 @@ info:
   title: Course by Leonid Zimin
   version: "1.0"
 paths:
+  /auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Авторизует пользователя по email/логину и паролю
+      parameters:
+      - description: Данные для авторизации
+        in: body
+        name: credentials
+        required: true
+        schema:
+          $ref: '#/definitions/dto.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Успешная авторизация
+        "400":
+          description: Неверный запрос
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "401":
+          description: Неверные учетные данные
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Авторизация пользователя
+      tags:
+      - auth
+  /auth/logout:
+    post:
+      description: Завершает сессию пользователя и удаляет токен
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Успешный выход из системы
+        "401":
+          description: JWT токен обязателен
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Внутренняя ошибка сервера
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Выход из системы
+      tags:
+      - auth
   /auth/register:
     post:
       consumes:
       - application/json
-      description: Регистрирует нового пользователя в системе и создает сессию
+      description: Регистрирует нового пользователя в системе
       parameters:
       - description: Данные для регистрации
         in: body
@@ -38,8 +171,349 @@ paths:
         "201":
           description: Пользователь успешно зарегистрирован
         "400":
-          description: Ошибки регистрации
+          description: Неверный запрос
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "409":
+          description: Пользователь с таким логином или email уже существует
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
       summary: Регистрация пользователя
       tags:
       - auth
+  /notes/{noteId}:
+    delete:
+      description: Удаляет существующую заметку пользователя
+      parameters:
+      - description: ID заметки
+        in: path
+        name: noteId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Заметка успешно удалена
+        "400":
+          description: Неверный запрос
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "401":
+          description: Пользователь не авторизован
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "404":
+          description: Заметка не найдена
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Внутренняя ошибка сервера
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Удалить заметку
+      tags:
+      - notes
+  /notes/{noteId}/edit:
+    put:
+      consumes:
+      - application/json
+      description: Обновляет существующую заметку пользователя
+      parameters:
+      - description: ID заметки
+        in: path
+        name: noteId
+        required: true
+        type: string
+      - description: Данные для обновления заметки
+        in: body
+        name: note
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateOrUpdateNote'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Заметка успешно обновлена
+        "400":
+          description: Неверный запрос
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "401":
+          description: Пользователь не авторизован
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "404":
+          description: Заметка не найдена
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Внутренняя ошибка сервера
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Обновить заметку
+      tags:
+      - notes
+  /notes/all:
+    get:
+      description: Возвращает список всех заметок пользователя
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Список заметок
+          schema:
+            items:
+              $ref: '#/definitions/dto.NoteDTO'
+            type: array
+        "400":
+          description: Неверный запрос
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "401":
+          description: Пользователь не авторизован
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Внутренняя ошибка сервера
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Получить все заметки
+      tags:
+      - notes
+  /notes/create:
+    post:
+      consumes:
+      - application/json
+      description: Создает новую заметку для пользователя
+      parameters:
+      - description: Данные для создания заметки
+        in: body
+        name: note
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateOrUpdateNote'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: ID созданной заметки
+          schema:
+            $ref: '#/definitions/dto.CreateNoteDTO'
+        "400":
+          description: Неверный запрос
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "401":
+          description: Пользователь не авторизован
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Внутренняя ошибка сервера
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Создать новую заметку
+      tags:
+      - notes
+  /todo/{taskId}:
+    delete:
+      description: Удаляет существующую задачу пользователя
+      parameters:
+      - description: ID задачи
+        in: path
+        name: taskId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Задача удалена
+        "400":
+          description: Неверный запрос
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "401":
+          description: Пользователь не авторизован
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Внутренняя ошибка сервера
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Удалить задачу
+      tags:
+      - tasks
+  /todo/{taskId}/edit:
+    patch:
+      description: Обновляет статус существующей задачи пользователя
+      parameters:
+      - description: ID задачи
+        in: path
+        name: taskId
+        required: true
+        type: string
+      - description: Новый статус задачи (waiting, in_progress, completed)
+        in: query
+        name: status
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Статус задачи обновлен
+        "400":
+          description: Неверный запрос
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "401":
+          description: Пользователь не авторизован
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Внутренняя ошибка сервера
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Обновить статус задачи
+      tags:
+      - tasks
+    put:
+      consumes:
+      - application/json
+      description: Обновляет существующую задачу пользователя
+      parameters:
+      - description: ID задачи
+        in: path
+        name: taskId
+        required: true
+        type: string
+      - description: Данные для обновления задачи
+        in: body
+        name: task
+        required: true
+        schema:
+          $ref: '#/definitions/dto.PostTaskDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Задача обновлена
+        "400":
+          description: Неверный запрос
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "401":
+          description: Пользователь не авторизован
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Внутренняя ошибка сервера
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Обновить задачу
+      tags:
+      - tasks
+  /todo/all:
+    get:
+      description: Возвращает список всех задач текущего пользователя
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Список задач
+          schema:
+            items:
+              $ref: '#/definitions/dto.TaskDTO'
+            type: array
+        "401":
+          description: Пользователь не авторизован
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Внутренняя ошибка сервера
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Получить задачи пользователя
+      tags:
+      - tasks
+  /todo/create:
+    post:
+      consumes:
+      - application/json
+      description: Создает новую задачу для текущего пользователя
+      parameters:
+      - description: Данные для создания задачи
+        in: body
+        name: task
+        required: true
+        schema:
+          $ref: '#/definitions/dto.PostTaskDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Задача создана
+        "400":
+          description: Неверный запрос
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "401":
+          description: Пользователь не авторизован
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Внутренняя ошибка сервера
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Создать новую задачу
+      tags:
+      - tasks
+  /users/me:
+    get:
+      description: Возвращает информацию о текущем авторизованном пользователе
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Информация о пользователе
+          schema:
+            $ref: '#/definitions/dto.UserDTO'
+        "400":
+          description: Неверный запрос
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "401":
+          description: Пользователь не авторизован
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Получить информацию о текущем пользователе
+      tags:
+      - user
+securityDefinitions:
+  BearerAuth:
+    in: header
+    name: Authorization
+    type: apiKey
 swagger: "2.0"

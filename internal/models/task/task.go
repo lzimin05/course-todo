@@ -13,12 +13,12 @@ const (
 )
 
 type Task struct {
-	ID          uuid.UUID `json:"id"`
-	UserID      uuid.UUID `json:"user_id"`
-	Title       string    `json:"title"`
-	Description string    `json:"description"`
-	Importance  int       `json:"importance"`
-	Deadline    time.Time `json:"deadline"`
-	CreatedAt   time.Time `json:"created_at"`
-	Status      string    `json:"status"`
+	ID          uuid.UUID
+	UserID      uuid.UUID
+	Title       string
+	Description string 
+	Importance  int
+	Deadline    time.Time
+	CreatedAt   time.Time
+	Status      string
 }

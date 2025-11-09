@@ -1,7 +1,11 @@
 package dto
 
+import "github.com/google/uuid"
+
 type UserDTO struct {
-	Login    string `json:"login"`
-	Username string `json:"username"`
-	Email    string `json:"email"`
+	ID           uuid.UUID `json:"id"`
+	Login        string    `json:"login"`
+	Username     string    `json:"username"`
+	Email        string    `json:"email"`
+	PasswordHash []byte    `json:"-"`
 }
