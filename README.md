@@ -38,16 +38,16 @@ Course Todo - это современный бэкенд для управлен
 Проект построен по принципам **Clean Architecture** с четким разделением слоев:
 
 ```
-├── cmd/                    # Точки входа
+├── cmd/                   # Точки входа
 │   ├── app/               # Основное приложение
 │   └── migrations/        # Миграции БД
 ├── config/                # Конфигурация
 ├── internal/
-│   ├── models/           # Модели данных
-│   ├── usecase/          # Бизнес-логика
-│   ├── transport/        # HTTP-обработчики и middleware
-│   └── infrastructure/   # Репозитории и внешние сервисы
-└── db/migrations/        # SQL миграции
+│   ├── models/            # Модели данных
+│   ├── usecase/           # Бизнес-логика
+│   ├── transport/         # HTTP-обработчики и middleware
+│   └── infrastructure/    # Репозитории и внешние сервисы
+└── db/migrations/         # SQL миграции
 ```
 
 ## 🏃‍♂️ Быстрый старт
