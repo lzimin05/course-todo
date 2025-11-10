@@ -2,12 +2,12 @@ CONFIG_SOURCE=config.yml
 ENV_FILE=.env
 
 create-env:
-	@if [ ! -f .env ]; then \
-		echo "Generating .env from config.yml..."; \
-		python3 -c "import yaml; config = yaml.safe_load(open('config.yml')); open('.env', 'w').write('\n'.join([f'{k}={v}' for k, v in config.items()]))"; \
-		echo ".env file generated!"; \
+	@if [ ! -f $(ENV_FILE) ]; then \
+		echo "Generating $(ENV_FILE) from $(CONFIG_SOURCE)..."; \
+		python3 -c "import yaml; config = yaml.safe_load(open('$(CONFIG_SOURCE)')); open('$(ENV_FILE)', 'w').write('\n'.join([f'{k}={v}' for k, v in config.items()]))"; \
+		echo "$(ENV_FILE) file generated!"; \
 	else \
-		echo ".env already exists. Skipping..."; \
+		echo "$(ENV_FILE) already exists. Skipping..."; \
 	fi
 
 swagger:
