@@ -5,7 +5,9 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/google/uuid"
 	errs "github.com/lzimin05/course-todo/internal/models/errs"
+	projectmodels "github.com/lzimin05/course-todo/internal/models/project"
 	models "github.com/lzimin05/course-todo/internal/models/user"
 	"github.com/lzimin05/course-todo/internal/transport/jwt"
 	"github.com/lzimin05/course-todo/internal/transport/middleware/logctx"
@@ -27,17 +29,23 @@ type IAuthRedisRepository interface {
 	AddToBlacklist(ctx context.Context, userID, token string) error
 }
 
-type AuthUsecase struct {
-	repo      AuthRepository
-	tokenator ITokenator
-	redisRepo IAuthRedisRepository
+type ProjectRepository interface {
+	CreateProject(ctx context.Context, project *projectmodels.Project) error
 }
 
-func New(repo AuthRepository, tokenator ITokenator, redisRepo IAuthRedisRepository) *AuthUsecase {
+type AuthUsecase struct {
+	repo        AuthRepository
+	tokenator   ITokenator
+	redisRepo   IAuthRedisRepository
+	projectRepo ProjectRepository
+}
+
+func New(repo AuthRepository, tokenator ITokenator, redisRepo IAuthRedisRepository, projectRepo ProjectRepository) *AuthUsecase {
 	return &AuthUsecase{
-		repo:      repo,
-		tokenator: tokenator,
-		redisRepo: redisRepo,
+		repo:        repo,
+		tokenator:   tokenator,
+		redisRepo:   redisRepo,
+		projectRepo: projectRepo,
 	}
 }
 
@@ -90,6 +98,18 @@ func (uc *AuthUsecase) Register(ctx context.Context, login, username, email, pas
 		}
 		logger.WithError(err).Error("failed to create user")
 		return "", err
+	}
+
+	defaultProject := &projectmodels.Project{
+		ID:          uuid.New(),
+		Name:        "Мои первые задачи",
+		Description: fmt.Sprintf("%s, начните работу с добавления ваших первых задач", user.Username),
+		OwnerID:     user.ID,
+	}
+
+	err = uc.projectRepo.CreateProject(ctx, defaultProject)
+	if err != nil {
+		logger.WithError(err).Error("failed to create default project")
 	}
 
 	token, err := uc.tokenator.CreateJWT(user.ID.String())

@@ -15,6 +15,7 @@ var (
 	ErrEmptyNoteName      = errors.New("note name cannot be empty")
 	ErrNoAccess           = errors.New("no access to project")
 	ErrNotOwner           = errors.New("user is not project owner")
+	ErrOwnerCannotLeave   = errors.New("project owner cannot leave project")
 )
 
 func NewNotFoundError(msg string) error {

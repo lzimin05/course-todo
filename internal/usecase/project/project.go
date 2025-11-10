@@ -295,3 +295,46 @@ func (uc *ProjectUsecase) UpdateProject(ctx context.Context, projectID uuid.UUID
 		CreatedAt:   updatedProject.CreatedAt,
 	}, nil
 }
+
+func (uc *ProjectUsecase) LeaveProject(ctx context.Context, projectID uuid.UUID) error {
+	const op = "ProjectUseCase.LeaveProject"
+	logger := logctx.GetLogger(ctx).WithField("op", op).WithField("projectID", projectID)
+
+	userID, err := helpers.GetUserIDFromContext(ctx)
+	if err != nil {
+		logger.WithError(err).Error("invalid user ID format")
+		return err
+	}
+
+	// Проверяем, что пользователь не является владельцем проекта
+	project, err := uc.repo.GetProjectByID(ctx, projectID)
+	if err != nil {
+		logger.WithError(err).Error("failed to get project")
+		return err
+	}
+
+	if project.OwnerID == userID {
+		logger.Warn("project owner cannot leave project")
+		return errs.ErrOwnerCannotLeave
+	}
+
+	// Проверяем, что пользователь является участником проекта
+	hasAccess, err := uc.repo.CheckProjectAccess(ctx, projectID, userID)
+	if err != nil {
+		logger.WithError(err).Error("failed to check project access")
+		return err
+	}
+
+	if !hasAccess {
+		logger.Warn("user is not a member of this project")
+		return errs.ErrNoAccess
+	}
+
+	err = uc.repo.RemoveProjectMember(ctx, projectID, userID)
+	if err != nil {
+		logger.WithError(err).Error("failed to leave project")
+		return err
+	}
+
+	return nil
+}
