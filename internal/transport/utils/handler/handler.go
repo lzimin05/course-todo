@@ -15,6 +15,8 @@ func HandleError(ctx context.Context, w http.ResponseWriter, err error, defaultM
 		response.SendError(ctx, w, http.StatusForbidden, "Access denied")
 	case errors.Is(err, errs.ErrNotOwner):
 		response.SendError(ctx, w, http.StatusForbidden, "Insufficient permissions")
+	case errors.Is(err, errs.ErrOwnerCannotLeave):
+		response.SendError(ctx, w, http.StatusForbidden, "Project owner cannot leave project")
 	case errors.Is(err, errs.ErrNotFound):
 		response.SendError(ctx, w, http.StatusNotFound, "Resource not found")
 	case errors.Is(err, errs.ErrInvalidID):

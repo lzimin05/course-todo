@@ -573,6 +573,46 @@ paths:
       summary: Обновить проект
       tags:
       - projects
+  /projects/{projectId}/leave:
+    post:
+      description: Позволяет участнику покинуть проект (владелец не может покинуть
+        проект)
+      parameters:
+      - description: ID проекта
+        in: path
+        name: projectId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Пользователь покинул проект
+        "400":
+          description: Неверный запрос
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "401":
+          description: Пользователь не авторизован
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "403":
+          description: Недостаточно прав или владелец не может покинуть проект
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "404":
+          description: Проект не найден
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Внутренняя ошибка сервера
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Покинуть проект
+      tags:
+      - projects
   /projects/{projectId}/members:
     get:
       description: Возвращает список всех участников проекта

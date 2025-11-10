@@ -182,6 +182,9 @@ func NewApp(conf *config.Config) (*App, error) {
 		projectRouter.Handle("/{projectId}/members/{userId}",
 			middleware.AuthMiddleware(tokenator)(http.HandlerFunc(projectHandler.RemoveProjectMember)),
 		).Methods(http.MethodDelete)
+		projectRouter.Handle("/{projectId}/leave",
+			middleware.AuthMiddleware(tokenator)(http.HandlerFunc(projectHandler.LeaveProject)),
+		).Methods(http.MethodPost)
 
 		// Задачи и заметки проекта
 		projectRouter.Handle("/{projectId}/tasks",
