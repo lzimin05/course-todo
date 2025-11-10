@@ -7,9 +7,10 @@ import (
 )
 
 type Note struct {
-	ID           uuid.UUID
-	UserID       uuid.UUID
-	Name         string
-	Description  string
-	CreatedAt    time.Time
+	ID          uuid.UUID
+	ProjectID   uuid.UUID
+	UserID      uuid.UUID
+	Name        string
+	Description string
+	CreatedAt   time.Time
 }

@@ -1,5 +1,12 @@
 basePath: /api
 definitions:
+  dto.AddMemberDTO:
+    properties:
+      user_id:
+        type: string
+    required:
+    - user_id
+    type: object
   dto.CreateNoteDTO:
     properties:
       id:
@@ -11,6 +18,10 @@ definitions:
         type: string
       name:
         type: string
+      project_id:
+        type: string
+    required:
+    - project_id
     type: object
   dto.ErrorResponse:
     properties:
@@ -34,8 +45,19 @@ definitions:
         type: string
       name:
         type: string
+      project_id:
+        type: string
       user_id:
         type: string
+    type: object
+  dto.PostProjectDTO:
+    properties:
+      description:
+        type: string
+      name:
+        type: string
+    required:
+    - name
     type: object
   dto.PostTaskDTO:
     properties:
@@ -45,11 +67,40 @@ definitions:
         type: string
       importance:
         type: integer
+      project_id:
+        type: string
       title:
         type: string
     required:
     - importance
+    - project_id
     - title
+    type: object
+  dto.ProjectDTO:
+    properties:
+      created_at:
+        type: string
+      description:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      owner_id:
+        type: string
+    type: object
+  dto.ProjectMemberDTO:
+    properties:
+      id:
+        type: string
+      joined_at:
+        type: string
+      project_id:
+        type: string
+      role:
+        type: string
+      user_id:
+        type: string
     type: object
   dto.RegisterRequest:
     properties:
@@ -74,6 +125,8 @@ definitions:
         type: string
       importance:
         type: integer
+      project_id:
+        type: string
       status:
         type: string
       title:
@@ -83,6 +136,15 @@ definitions:
     required:
     - importance
     - title
+    type: object
+  dto.UpdateProjectDTO:
+    properties:
+      description:
+        type: string
+      name:
+        type: string
+    required:
+    - name
     type: object
   dto.UserDTO:
     properties:
@@ -324,6 +386,396 @@ paths:
       summary: Создать новую заметку
       tags:
       - notes
+  /projects:
+    get:
+      description: Возвращает список всех проектов текущего пользователя
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Список проектов
+          schema:
+            items:
+              $ref: '#/definitions/dto.ProjectDTO'
+            type: array
+        "401":
+          description: Пользователь не авторизован
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Внутренняя ошибка сервера
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Получить проекты пользователя
+      tags:
+      - projects
+    post:
+      consumes:
+      - application/json
+      description: Создает новый проект для текущего пользователя
+      parameters:
+      - description: Данные для создания проекта
+        in: body
+        name: project
+        required: true
+        schema:
+          $ref: '#/definitions/dto.PostProjectDTO'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Проект создан
+          schema:
+            $ref: '#/definitions/dto.ProjectDTO'
+        "400":
+          description: Неверный запрос
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "401":
+          description: Пользователь не авторизован
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Внутренняя ошибка сервера
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Создать новый проект
+      tags:
+      - projects
+  /projects/{projectId}:
+    delete:
+      description: Удаляет проект (только владелец)
+      parameters:
+      - description: ID проекта
+        in: path
+        name: projectId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Проект удален
+        "400":
+          description: Неверный запрос
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "401":
+          description: Пользователь не авторизован
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "403":
+          description: Недостаточно прав
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "404":
+          description: Проект не найден
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Внутренняя ошибка сервера
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Удалить проект
+      tags:
+      - projects
+    get:
+      description: Возвращает информацию о проекте по его ID
+      parameters:
+      - description: ID проекта
+        in: path
+        name: projectId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Информация о проекте
+          schema:
+            $ref: '#/definitions/dto.ProjectDTO'
+        "400":
+          description: Неверный запрос
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "401":
+          description: Пользователь не авторизован
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "403":
+          description: Нет доступа к проекту
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "404":
+          description: Проект не найден
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Внутренняя ошибка сервера
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Получить проект по ID
+      tags:
+      - projects
+    put:
+      consumes:
+      - application/json
+      description: Обновляет название и описание проекта (только владелец)
+      parameters:
+      - description: ID проекта
+        in: path
+        name: projectId
+        required: true
+        type: string
+      - description: Данные для обновления проекта
+        in: body
+        name: project
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateProjectDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Обновленный проект
+          schema:
+            $ref: '#/definitions/dto.ProjectDTO'
+        "400":
+          description: Неверный запрос
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "401":
+          description: Пользователь не авторизован
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "403":
+          description: Недостаточно прав
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "404":
+          description: Проект не найден
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Внутренняя ошибка сервера
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Обновить проект
+      tags:
+      - projects
+  /projects/{projectId}/members:
+    get:
+      description: Возвращает список всех участников проекта
+      parameters:
+      - description: ID проекта
+        in: path
+        name: projectId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Список участников
+          schema:
+            items:
+              $ref: '#/definitions/dto.ProjectMemberDTO'
+            type: array
+        "400":
+          description: Неверный запрос
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "401":
+          description: Пользователь не авторизован
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "403":
+          description: Нет доступа к проекту
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Внутренняя ошибка сервера
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Получить участников проекта
+      tags:
+      - projects
+    post:
+      consumes:
+      - application/json
+      description: Добавляет пользователя в проект в качестве участника
+      parameters:
+      - description: ID проекта
+        in: path
+        name: projectId
+        required: true
+        type: string
+      - description: Данные участника
+        in: body
+        name: member
+        required: true
+        schema:
+          $ref: '#/definitions/dto.AddMemberDTO'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Участник добавлен
+        "400":
+          description: Неверный запрос
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "401":
+          description: Пользователь не авторизован
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "403":
+          description: Недостаточно прав
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Внутренняя ошибка сервера
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Добавить участника в проект
+      tags:
+      - projects
+  /projects/{projectId}/members/{userId}:
+    delete:
+      description: Удаляет участника из проекта (только владелец)
+      parameters:
+      - description: ID проекта
+        in: path
+        name: projectId
+        required: true
+        type: string
+      - description: ID пользователя
+        in: path
+        name: userId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Участник удален
+        "400":
+          description: Неверный запрос
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "401":
+          description: Пользователь не авторизован
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "403":
+          description: Недостаточно прав
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "404":
+          description: Участник не найден
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Внутренняя ошибка сервера
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Удалить участника из проекта
+      tags:
+      - projects
+  /projects/{projectId}/notes:
+    get:
+      description: Возвращает список всех заметок указанного проекта
+      parameters:
+      - description: ID проекта
+        in: path
+        name: projectId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Список заметок
+          schema:
+            items:
+              $ref: '#/definitions/dto.NoteDTO'
+            type: array
+        "400":
+          description: Неверный запрос
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "401":
+          description: Пользователь не авторизован
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "403":
+          description: Нет доступа к проекту
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Внутренняя ошибка сервера
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Получить заметки проекта
+      tags:
+      - notes
+  /projects/{projectId}/tasks:
+    get:
+      description: Возвращает список всех задач указанного проекта
+      parameters:
+      - description: ID проекта
+        in: path
+        name: projectId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Список задач
+          schema:
+            items:
+              $ref: '#/definitions/dto.TaskDTO'
+            type: array
+        "400":
+          description: Неверный запрос
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "401":
+          description: Пользователь не авторизован
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "403":
+          description: Нет доступа к проекту
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Внутренняя ошибка сервера
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Получить задачи проекта
+      tags:
+      - tasks
   /todo/{taskId}:
     delete:
       description: Удаляет существующую задачу пользователя
@@ -469,7 +921,7 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
+        "201":
           description: Задача создана
         "400":
           description: Неверный запрос
@@ -477,6 +929,10 @@ paths:
             $ref: '#/definitions/dto.ErrorResponse'
         "401":
           description: Пользователь не авторизован
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "403":
+          description: Нет доступа к проекту
           schema:
             $ref: '#/definitions/dto.ErrorResponse'
         "500":
@@ -488,6 +944,64 @@ paths:
       summary: Создать новую задачу
       tags:
       - tasks
+  /users/by-email:
+    get:
+      description: Возвращает информацию о пользователе по его email адресу
+      parameters:
+      - description: Email пользователя
+        in: query
+        name: email
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Информация о пользователе
+          schema:
+            $ref: '#/definitions/dto.UserDTO'
+        "400":
+          description: Неверный запрос
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "404":
+          description: Пользователь не найден
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Получить пользователя по email
+      tags:
+      - user
+  /users/by-login:
+    get:
+      description: Возвращает информацию о пользователе по его логину
+      parameters:
+      - description: Логин пользователя
+        in: query
+        name: login
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Информация о пользователе
+          schema:
+            $ref: '#/definitions/dto.UserDTO'
+        "400":
+          description: Неверный запрос
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "404":
+          description: Пользователь не найден
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Получить пользователя по логину
+      tags:
+      - user
   /users/me:
     get:
       description: Возвращает информацию о текущем авторизованном пользователе
