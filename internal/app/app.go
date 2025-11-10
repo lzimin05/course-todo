@@ -67,19 +67,21 @@ func NewApp(conf *config.Config) (*App, error) {
 	if err != nil {
 		logger.Fatalf("redis auth connection error: %v", err)
 	}
-	authRepo := authrepo.New(db)
+
 	redisAuthRepo := redis.NewAuthRepository(redisAuthClient, conf.JWTConfig)
 	tokenator := jwt.NewTokenator(conf.JWTConfig)
-	authUC := authuc.New(authRepo, tokenator, redisAuthRepo)
+
+	projectRepository := projectRepo.New(db)
+	projectUseCase := projectuc.New(projectRepository)
+	projectHandler := projectt.New(projectUseCase, conf)
+
+	authRepo := authrepo.New(db)
+	authUC := authuc.New(authRepo, tokenator, redisAuthRepo, projectRepository)
 	authHandler := autht.New(authUC, conf)
 
 	userRepo := userrepo.New(db)
 	userUC := useruc.New(userRepo)
 	userHandler := usert.New(userUC, conf)
-
-	projectRepository := projectRepo.New(db)
-	projectUseCase := projectuc.New(projectRepository)
-	projectHandler := projectt.New(projectUseCase, conf)
 
 	noteRepo := noteRepo.NewNoteRepository(db)
 	noteUC := noteuc.NewNoteUsecase(noteRepo, projectRepository)
