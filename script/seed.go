@@ -7,9 +7,9 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	_ "github.com/lib/pq"
 	"github.com/lzimin05/course-todo/config"
 	"golang.org/x/crypto/bcrypt"
-	_ "github.com/lib/pq"
 )
 
 func main() {
@@ -170,11 +170,11 @@ func createTestProjects(db *sql.DB, users []TestUser) ([]TestProject, error) {
 
 	for i := range projects {
 		projects[i].ID = uuid.New()
-		_, err := db.Exec(query, 
-			projects[i].ID, 
-			projects[i].Name, 
-			projects[i].Description, 
-			projects[i].OwnerID, 
+		_, err := db.Exec(query,
+			projects[i].ID,
+			projects[i].Name,
+			projects[i].Description,
+			projects[i].OwnerID,
 			time.Now().Add(-time.Duration(i*24)*time.Hour), // разные даты создания
 		)
 		if err != nil {
@@ -208,18 +208,18 @@ func createProjectMembers(db *sql.DB, projects []TestProject, users []TestUser) 
 		{0, 1}, {0, 2}, {0, 3}, // В первый проект добавляем john, jane, alice
 		{1, 0}, {1, 4}, {1, 5}, // Во второй проект добавляем admin, bob, charlie
 		{2, 0}, {2, 1}, {2, 4}, // В третий проект добавляем admin, john, bob
-		{3, 1}, {3, 2},         // В четвертый проект добавляем john, jane
+		{3, 1}, {3, 2}, // В четвертый проект добавляем john, jane
 		{4, 0}, {4, 2}, {4, 3}, // В пятый проект добавляем admin, jane, alice
 	}
 
 	for _, member := range members {
 		if member.UserIndex < len(users) && member.ProjectIndex < len(projects) {
 			memberID := uuid.New()
-			_, err := db.Exec(query, 
-				memberID, 
-				projects[member.ProjectIndex].ID, 
-				users[member.UserIndex].ID, 
-				"member", 
+			_, err := db.Exec(query,
+				memberID,
+				projects[member.ProjectIndex].ID,
+				users[member.UserIndex].ID,
+				"member",
 				time.Now().Add(-time.Duration(member.ProjectIndex*12)*time.Hour),
 			)
 			if err != nil {
@@ -243,7 +243,7 @@ type TestTask struct {
 }
 
 func createTestTasks(db *sql.DB, projects []TestProject, users []TestUser) ([]TestTask, error) {
-	
+
 	tasks := []TestTask{
 		// Задачи для первого проекта
 		{
@@ -251,7 +251,7 @@ func createTestTasks(db *sql.DB, projects []TestProject, users []TestUser) ([]Te
 			UserID:      users[1].ID,
 			Title:       "Дизайн пользовательского интерфейса",
 			Description: "Создать макеты основных экранов приложения",
-			Importance:  5,
+			Importance:  3,
 			Status:      "in_progress",
 			Deadline:    time.Now().Add(7 * 24 * time.Hour),
 		},
@@ -260,7 +260,7 @@ func createTestTasks(db *sql.DB, projects []TestProject, users []TestUser) ([]Te
 			UserID:      users[2].ID,
 			Title:       "Настройка базы данных",
 			Description: "Создать схему БД и настроить подключение",
-			Importance:  4,
+			Importance:  2,
 			Status:      "completed",
 			Deadline:    time.Now().Add(-2 * 24 * time.Hour),
 		},
@@ -269,18 +269,18 @@ func createTestTasks(db *sql.DB, projects []TestProject, users []TestUser) ([]Te
 			UserID:      users[3].ID,
 			Title:       "Разработка API",
 			Description: "Создать REST API для мобильного приложения",
-			Importance:  5,
+			Importance:  3,
 			Status:      "waiting",
 			Deadline:    time.Now().Add(14 * 24 * time.Hour),
 		},
-		
+
 		// Задачи для второго проекта
 		{
 			ProjectID:   projects[1].ID,
 			UserID:      users[0].ID,
 			Title:       "Создание главной страницы",
 			Description: "Разработать главную страницу сайта",
-			Importance:  3,
+			Importance:  1,
 			Status:      "in_progress",
 			Deadline:    time.Now().Add(5 * 24 * time.Hour),
 		},
@@ -293,14 +293,14 @@ func createTestTasks(db *sql.DB, projects []TestProject, users []TestUser) ([]Te
 			Status:      "waiting",
 			Deadline:    time.Now().Add(21 * 24 * time.Hour),
 		},
-		
+
 		// Задачи для третьего проекта
 		{
 			ProjectID:   projects[2].ID,
 			UserID:      users[0].ID,
 			Title:       "Анализ требований",
 			Description: "Проанализировать бизнес-требования для системы аналитики",
-			Importance:  4,
+			Importance:  2,
 			Status:      "completed",
 			Deadline:    time.Now().Add(-5 * 24 * time.Hour),
 		},
@@ -313,7 +313,7 @@ func createTestTasks(db *sql.DB, projects []TestProject, users []TestUser) ([]Te
 			Status:      "in_progress",
 			Deadline:    time.Now().Add(3 * 24 * time.Hour),
 		},
-		
+
 		// Задачи для четвертого проекта
 		{
 			ProjectID:   projects[3].ID,
@@ -324,7 +324,7 @@ func createTestTasks(db *sql.DB, projects []TestProject, users []TestUser) ([]Te
 			Status:      "waiting",
 			Deadline:    time.Now().Add(30 * 24 * time.Hour),
 		},
-		
+
 		// Задачи для пятого проекта
 		{
 			ProjectID:   projects[4].ID,
@@ -340,7 +340,7 @@ func createTestTasks(db *sql.DB, projects []TestProject, users []TestUser) ([]Te
 			UserID:      users[2].ID,
 			Title:       "Написание тестов",
 			Description: "Создать unit тесты для основного функционала",
-			Importance:  4,
+			Importance:  2,
 			Status:      "waiting",
 			Deadline:    time.Now().Add(15 * 24 * time.Hour),
 		},
@@ -354,7 +354,7 @@ func createTestTasks(db *sql.DB, projects []TestProject, users []TestUser) ([]Te
 	for i := range tasks {
 		tasks[i].ID = uuid.New()
 		createdAt := time.Now().Add(-time.Duration(i*6) * time.Hour)
-		
+
 		_, err := db.Exec(query,
 			tasks[i].ID,
 			tasks[i].ProjectID,
@@ -442,7 +442,7 @@ func createTestNotes(db *sql.DB, projects []TestProject, users []TestUser) ([]Te
 	for i := range notes {
 		notes[i].ID = uuid.New()
 		createdAt := time.Now().Add(-time.Duration(i*4) * time.Hour)
-		
+
 		_, err := db.Exec(query,
 			notes[i].ID,
 			notes[i].ProjectID,
