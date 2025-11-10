@@ -7,9 +7,10 @@ import (
 )
 
 type Note struct {
-	ID           uuid.UUID `json:"id"`
-	UserID       uuid.UUID `json:"user_id"`
-	Name         string    `json:"name"`
-	Description  string    `json:"description"`
-	CreatedAt    time.Time `json:"created_at"`
+	ID          uuid.UUID
+	ProjectID   uuid.UUID
+	UserID      uuid.UUID
+	Name        string
+	Description string
+	CreatedAt   time.Time
 }

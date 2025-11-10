@@ -13,7 +13,7 @@ type Client struct {
 	*redis.Client
 }
 
-func NewClient(cfg *config.AuthRedisConfig) (*Client, error) {
+func NewClient(cfg *config.RedisConfig) (*Client, error) {
 	rdb := redis.NewClient(&redis.Options{
 		Addr:     fmt.Sprintf("%s:%s", cfg.Host, cfg.Port),
 		Password: cfg.Password,

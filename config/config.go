@@ -8,19 +8,17 @@ import (
 	"strconv"
 	"time"
 
-	"gopkg.in/yaml.v3"
+	"github.com/joho/godotenv"
 )
 
-// Config сохраняет оригинальную структуру для совместимости
 type Config struct {
 	DBConfig         *DBConfig
 	ServerConfig     *ServerConfig
 	JWTConfig        *JWTConfig
 	MigrationsConfig *MigrationsConfig
-	AuthRedisConfig   *AuthRedisConfig
+	RedisConfig      *RedisConfig
 }
 
-// Оригинальные структуры (оставляем без изменений)
 type DBConfig struct {
 	User            string
 	Password        string
@@ -45,157 +43,159 @@ type MigrationsConfig struct {
 	Path string
 }
 
-type AuthRedisConfig struct {
+type RedisConfig struct {
 	Host     string
 	Port     string
 	Password string
 	DB       int
 }
 
-// NewConfig сохраняет оригинальную сигнатуру, но с улучшенной реализацией
 func NewConfig() (*Config, error) {
-	// Читаем конфиг из файла
-	raw, err := loadYamlConfig("config.yml")
+	if err := godotenv.Load(); err != nil {
+		return nil, fmt.Errorf("error loading .env file: %v", err)
+	}
+
+	dbConfig, err := newDBConfig()
 	if err != nil {
 		return nil, err
 	}
 
-	// Преобразуем в старую структуру
-	dbConfig := &DBConfig{
-		User:            raw.PostgresUser,
-		Password:        raw.PostgresPass,
-		DB:              raw.PostgresDB,
-		Port:            raw.PostgresPort,
-		Host:            raw.PostgresHost,
-		MaxOpenConns:    100,
-		MaxIdleConns:    90,
-		ConnMaxLifetime: 5 * time.Minute,
+	serverConfig, err := newServerConfig()
+	if err != nil {
+		return nil, err
 	}
 
-	serverConfig := &ServerConfig{
-		Port: raw.ServerPort,
+	JWTConfig, err := newJWTConfig()
+	if err != nil {
+		return nil, err
 	}
 
-	jwtConfig := &JWTConfig{
-		Signature:     raw.JwtSignature,
-		TokenLifeSpan: raw.JwtTokenLife,
+	migrationsConfig, err := newMigrationsConfig()
+	if err != nil {
+		return nil, err
 	}
 
-	migrationsConfig := &MigrationsConfig{
-		Path: raw.MigrationsPath,
-	}
-
-	authConfig := &AuthRedisConfig{
-		Port: raw.AuthPort,
-		Host: raw.AuthHost,
-		Password: raw.AuthPass,
-		DB: raw.AuthDB,
+	redisConfig, err := newRedisConfig()
+	if err != nil {
+		return nil, err
 	}
 
 	return &Config{
 		DBConfig:         dbConfig,
 		ServerConfig:     serverConfig,
-		JWTConfig:        jwtConfig,
+		JWTConfig:        JWTConfig,
 		MigrationsConfig: migrationsConfig,
-		AuthRedisConfig: authConfig,
+		RedisConfig:      redisConfig,
 	}, nil
 }
 
-// Внутренняя структура для парсинга YAML
-type yamlConfig struct {
-	ServerPort     string `yaml:"SERVER_PORT"`
-	JwtSignature   string `yaml:"JWT_SIGNATURE"`
-	PostgresUser   string `yaml:"POSTGRES_USER"`
-	PostgresPass   string `yaml:"POSTGRES_PASSWORD"`
-	PostgresDB     string `yaml:"POSTGRES_DB"`
-	PostgresPort   int    `yaml:"POSTGRES_PORT"`
-	PostgresHost   string `yaml:"POSTGRES_HOST"`
-	MigrationsPath string `yaml:"MIGRATIONS_PATH"`
-	JwtTokenLife   time.Duration `yaml:"JWT_TOKEN_LIFESPAN"`
-	AuthPass   string `yaml:"AUTH_REDIS_PASSWORD"`
-	AuthDB     int `yaml:"AUTH_REDIS_DB"`
-	AuthPort   string `yaml:"AUTH_REDIS_PORT"`
-	AuthHost   string `yaml:"AUTH_REDIS_HOST"`
+func newDBConfig() (*DBConfig, error) {
+	user, userExists := os.LookupEnv("POSTGRES_USER")
+	password, passwordExists := os.LookupEnv("POSTGRES_PASSWORD")
+	dbname, dbExists := os.LookupEnv("POSTGRES_DB")
+	host, hostExists := os.LookupEnv("POSTGRES_HOST")
+	portStr, portExists := os.LookupEnv("POSTGRES_PORT")
+
+	if !userExists || !passwordExists || !dbExists || !hostExists || !portExists {
+		return nil, errors.New("incomplete database configuration")
+	}
+
+	port, err := strconv.Atoi(portStr)
+	if err != nil {
+		return nil, errors.New("invalid POSTGRES_PORT value")
+	}
+
+	return &DBConfig{
+		User:            user,
+		Password:        password,
+		DB:              dbname,
+		Port:            port,
+		Host:            host,
+		MaxOpenConns:    100,
+		MaxIdleConns:    90,
+		ConnMaxLifetime: 5 * time.Minute,
+	}, nil
 }
 
-// loadYamlConfig вынесен для удобства тестирования
-func loadYamlConfig(path string) (*yamlConfig, error) {
-	data, err := os.ReadFile(path)
-	if err != nil {
-		return nil, fmt.Errorf("error reading config file: %v", err)
-	}
-
-	var cfg struct {
-		ServerPort     string `yaml:"SERVER_PORT"`
-		JwtSignature   string `yaml:"JWT_SIGNATURE"`
-		PostgresUser   string `yaml:"POSTGRES_USER"`
-		PostgresPass   string `yaml:"POSTGRES_PASSWORD"`
-		PostgresDB     string `yaml:"POSTGRES_DB"`
-		PostgresPort   string `yaml:"POSTGRES_PORT"`
-		PostgresHost   string `yaml:"POSTGRES_HOST"`
-		MigrationsPath string `yaml:"MIGRATIONS_PATH"`
-		JwtTokenLife   string `yaml:"JWT_TOKEN_LIFESPAN"`
-
-		AuthPass   string `yaml:"AUTH_REDIS_PASSWORD"`
-		AuthDB     string `yaml:"AUTH_REDIS_DB"`
-		AuthPort   string `yaml:"AUTH_REDIS_PORT"`
-		AuthHost   string `yaml:"AUTH_REDIS_HOST"`
-	}
-
-	if err := yaml.Unmarshal(data, &cfg); err != nil {
-		return nil, fmt.Errorf("error parsing YAML: %v", err)
-	}
-
-	// Валидация
-	if cfg.ServerPort == "" {
+func newServerConfig() (*ServerConfig, error) {
+	port, portExists := os.LookupEnv("SERVER_PORT")
+	if !portExists {
 		return nil, errors.New("SERVER_PORT is required")
 	}
-	if cfg.JwtSignature == "" {
+
+	return &ServerConfig{
+		Port: port,
+	}, nil
+}
+
+func newJWTConfig() (*JWTConfig, error) {
+	signature, signatureExists := os.LookupEnv("JWT_SIGNATURE")
+	if !signatureExists {
 		return nil, errors.New("JWT_SIGNATURE is required")
 	}
 
-	if cfg.AuthPort == "" {
-		return nil, errors.New("AUTH_Redis_PORT is required")
-	}
-	if cfg.AuthHost== "" {
-		return nil, errors.New("AUTH_Redis_Host is required")
+	lifespanStr, lifespanExists := os.LookupEnv("JWT_TOKEN_LIFESPAN")
+	if !lifespanExists {
+		return nil, errors.New("JWT_TOKEN_LIFESPAN is required")
 	}
 
-	port, err := strconv.Atoi(cfg.PostgresPort)
+	lifespan, err := parseDurationWithDays(lifespanStr)
 	if err != nil {
-		return nil, errors.New("invalid POSTGRES_PORT value")
+		return nil, fmt.Errorf("invalid SESSION_TOKEN_LIFESPAN value: %v", err)
 	}
 
-	authDb, err := strconv.Atoi(cfg.AuthDB)
-	if err != nil {
-		return nil, errors.New("invalid POSTGRES_PORT value")
-	}
-
-	tokenLife := 24 * time.Hour // значение по умолчанию
-	if cfg.JwtTokenLife != "" {
-		if tl, err := time.ParseDuration(cfg.JwtTokenLife); err == nil {
-			tokenLife = tl
-		}
-	}
-
-	return &yamlConfig{
-		ServerPort:     cfg.ServerPort,
-		JwtSignature:   cfg.JwtSignature,
-		PostgresUser:   cfg.PostgresUser,
-		PostgresPass:   cfg.PostgresPass,
-		PostgresDB:     cfg.PostgresDB,
-		PostgresPort:   port,
-		PostgresHost:   cfg.PostgresHost,
-		MigrationsPath: cfg.MigrationsPath,
-		JwtTokenLife:   tokenLife,
-		AuthPass: cfg.AuthPass,
-		AuthDB: authDb,
-		AuthPort: cfg.AuthPort,
-		AuthHost: cfg.AuthHost,
+	return &JWTConfig{
+		Signature:     signature,
+		TokenLifeSpan: lifespan,
 	}, nil
 }
 
-// ConfigureDB оставляем без изменений для совместимости
+func parseDurationWithDays(s string) (time.Duration, error) {
+	if len(s) > 1 && s[len(s)-1] == 'd' {
+		days, err := strconv.Atoi(s[:len(s)-1])
+		if err != nil {
+			return 0, err
+		}
+		return time.Duration(days) * 24 * time.Hour, nil
+	}
+
+	return time.ParseDuration(s)
+}
+
+func newMigrationsConfig() (*MigrationsConfig, error) {
+	path, pathExists := os.LookupEnv("MIGRATIONS_PATH")
+	if !pathExists {
+		return nil, errors.New("MIGRATIONS_PATH is required")
+	}
+
+	return &MigrationsConfig{
+		Path: path,
+	}, nil
+}
+
+func newRedisConfig() (*RedisConfig, error) {
+	host, hostExists := os.LookupEnv("AUTH_REDIS_HOST")
+	port, portExists := os.LookupEnv("AUTH_REDIS_PORT")
+	password, passwordExists := os.LookupEnv("AUTH_REDIS_PASSWORD")
+	dbStr, dbExists := os.LookupEnv("AUTH_REDIS_DB")
+
+	if !hostExists || !portExists || !passwordExists || !dbExists {
+		return nil, errors.New("incomplete Redis configuration")
+	}
+
+	db, err := strconv.Atoi(dbStr)
+	if err != nil {
+		return nil, errors.New("invalid AUTH_REDIS_DB value")
+	}
+
+	return &RedisConfig{
+		Host:     host,
+		Port:     port,
+		Password: password,
+		DB:       db,
+	}, nil
+}
+
 func ConfigureDB(db *sql.DB, cfg *DBConfig) {
 	db.SetMaxOpenConns(cfg.MaxOpenConns)
 	db.SetMaxIdleConns(cfg.MaxIdleConns)

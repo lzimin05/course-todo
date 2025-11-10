@@ -70,53 +70,109 @@ make start
 
 ## 📡 API Endpoints
 
-### Аутентификация
+### 🔐 Аутентификация
 ```http
 POST /api/auth/register    # Регистрация пользователя
 POST /api/auth/login       # Вход в систему
 POST /api/auth/logout      # Выход из системы
 ```
 
-### Пользователи
+### 👤 Пользователи
 ```http
 GET /api/users/me          # Получить профиль текущего пользователя
+GET  /api/users/by-email   # Найти пользователя по email
+GET  /api/users/by-login   # Найти пользователя по логину
 ```
 
-### Задачи
+### 📈 Проект
+
 ```http
-POST /api/todo/create           # Создать новую задачу
-GET  /api/todo/all             # Получить все задачи пользователя
-PUT  /api/todo/{id}/edit       # Редактировать задачу
-PATCH /api/todo/{id}/edit      # Изменить статус задачи
-DELETE /api/todo/{id}/         # Удалить задачу
+POST /api/projects                   # Создать новый проект
+GET  /api/projects                   # Получить все проекты пользователя
+GET  /api/projects/{projectId}       # Получить проект по ID
+PUT  /api/projects/{projectId}       # Редактировать проект
+DELETE /api/projects/{projectId}     # Удалить проект
+```
+```http
+POST /api/projects/{projectId}/members              # Добавить участника в проект
+GET  /api/projects/{projectId}/members              # Получить участников проекта
+DELETE /api/projects/{projectId}/members/{userId}   # Удалить участника из проекта
+```
+```http
+GET /api/projects/{projectId}/tasks  # Получить задачи проекта
+GET /api/projects/{projectId}/notes  # Получить заметки проекта
 ```
 
-### Заметки
+### ✅  Задачи
 ```http
-GET  /api/notes/all            # Получить все заметки
-POST /api/notes/create         # Создать новую заметку
-PUT  /api/notes/{id}/edit      # Редактировать заметку
-DELETE /api/notes/{id}         # Удалить заметку
+POST /api/todo/create                # Создать новую задачу
+GET  /api/todo/all                   # Получить все задачи пользователя
+PUT  /api/todo/{taskId}/edit         # Редактировать задачу
+PATCH /api/todo/{taskId}/edit        # Изменить статус задачи
+DELETE /api/todo/{taskId}            # Удалить задачу
+```
+
+### 📝 Заметки
+```http
+GET  /api/notes/all                  # Получить все заметки пользователя
+POST /api/notes/create               # Создать новую заметку
+PUT  /api/notes/{noteId}/edit        # Редактировать заметку
+DELETE /api/notes/{noteId}           # Удалить заметку
 ```
 
 ## 🔧 Конфигурация
 
-Основные параметры настраиваются в `config.yml`:
+### Настройка окружения
 
-```yaml
-SERVER_PORT: *              # Порт веб-сервера
-JWT_SIGNATURE: *            # Секретный ключ для JWT
-JWT_TOKEN_LIFESPAN: *       # Время жизни токена
-POSTGRES_HOST: *            # Хост PostgreSQL
-POSTGRES_PORT: *            # Порт PostgreSQL
-POSTGRES_DB: *              # Имя базы данных
-AUTH_REDIS_HOST: *          # Хост Redis для аутентификации
-AUTH_REDIS_PORT: *          # Порт Redis
-```
-
-### Команды Make
+Перед первым запуском необходимо сгенерировать файл `.env` с настройками:
 
 ```bash
+make create-env
+```
+Эта команда создаст файл .env на основе настроек по умолчанию из config.yml.
+
+### Изменение настроек
+Если нужно изменить настройки, редактируйте файл .env:
+```bash
+nano .env
+```
+
+### Важные настройки для изменения в .env:
+```env
+JWT_SIGNATURE=your_secure_jwt_secret_here      # Секрет для JWT токенов
+POSTGRES_PASSWORD=your_secure_db_password      # Пароль PostgreSQL  
+AUTH_REDIS_PASSWORD=your_secure_redis_password # Пароль Redis
+```
+
+### Настройки по умолчанию (из config.yml):
+```yml
+SERVER_PORT: 8080
+
+POSTGRES_USER: user
+POSTGRES_PASSWORD: password
+POSTGRES_DB: todo_db
+POSTGRES_PORT: 5432
+POSTGRES_HOST: db
+
+MIGRATIONS_PATH: file://db/migrations
+
+JWT_TOKEN_LIFESPAN: 24h
+JWT_SIGNATURE: my_secret_key
+
+AUTH_REDIS_HOST: auth_redis
+AUTH_REDIS_PORT: 6380
+AUTH_REDIS_PASSWORD: password
+AUTH_REDIS_DB: 0
+```
+
+## 🚀 Команды Make
+
+```bash
+make create-env
+make deps
+make swagger
+make stop
+make start-background
 make start
 make clear
 ```
