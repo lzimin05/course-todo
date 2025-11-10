@@ -13,9 +13,10 @@ COPY . .
 # Создаем пустой .env файл на случай, если его нет
 RUN touch .env
 
-# Собираем оба приложения
+# Собираем все приложения
 RUN CGO_ENABLED=0 GOOS=linux go build -o main ./cmd/app/main.go && \
-    CGO_ENABLED=0 GOOS=linux go build -o migrate ./cmd/migrations/main.go
+    CGO_ENABLED=0 GOOS=linux go build -o migrate ./cmd/migrations/main.go && \
+    CGO_ENABLED=0 GOOS=linux go build -o seed ./script/seed.go
 
 # Этап 2: Финальный образ
 FROM alpine:3.18
@@ -25,6 +26,7 @@ WORKDIR /app
 # Копируем только необходимые артефакты
 COPY --from=builder /app/main .
 COPY --from=builder /app/migrate .
+COPY --from=builder /app/seed .
 COPY --from=builder /app/db/migrations ./db/migrations
 COPY --from=builder /app/.env .
 

@@ -18,6 +18,16 @@ deps:
 	go mod download
 	go mod tidy
 
+seed:
+	@echo "Заполнение базы данных тестовыми данными..."
+	@echo "Запуск базы данных..."
+	docker compose up -d db auth_redis
+	@echo "Ждем инициализации БД..."
+	@sleep 3
+	@echo "Запуск скрипта заполнения..."
+	docker compose run --rm todo-app ./seed
+	@echo "✅ База данных заполнена тестовыми данными!"
+
 stop:
 	docker compose stop
 

@@ -171,6 +171,7 @@ AUTH_REDIS_DB: 0
 make create-env
 make deps
 make swagger
+make seed
 make stop
 make start-background
 make start
