@@ -14,24 +14,35 @@ import (
 )
 
 const (
+	getAllNotesByProjectQuery = `
+		SELECT n.id, n.project_id, n.user_id, n.name, n.description, n.created_at
+		FROM todo.note n
+		JOIN todo.project_member pm ON n.project_id = pm.project_id
+		WHERE n.project_id = $1 AND pm.user_id = $2`
+
 	getAllNotesQuery = `
-		SELECT id, user_id, name, description, created_at
-		FROM todo.note 
-		WHERE user_id = $1`
+		SELECT n.id, n.project_id, n.user_id, n.name, n.description, n.created_at
+		FROM todo.note n
+		JOIN todo.project_member pm ON n.project_id = pm.project_id
+		WHERE n.user_id = $1`
 
 	createNoteQuery = `
-		INSERT INTO todo.note (id, user_id, name, description, created_at)
-		VALUES ($1, $2, $3, $4, $5)
+		INSERT INTO todo.note (id, project_id, user_id, name, description, created_at)
+		VALUES ($1, $2, $3, $4, $5, $6)
 		RETURNING id`
 
 	updateNoteQuery = `
 		UPDATE todo.note 
-		SET name = $3, description = $4 
-		WHERE id = $1 AND user_id = $2`
+		SET name = $4, description = $5 
+		WHERE id = $1 AND project_id = $2 AND project_id IN (
+			SELECT pm.project_id FROM todo.project_member pm WHERE pm.user_id = $3
+		)`
 
 	deleteNoteQuery = `
 		DELETE FROM todo.note 
-		WHERE id = $1 AND user_id = $2`
+		WHERE id = $1 AND project_id IN (
+			SELECT pm.project_id FROM todo.project_member pm WHERE pm.user_id = $2
+		)`
 )
 
 type NoteRepository struct {
@@ -40,6 +51,38 @@ type NoteRepository struct {
 
 func NewNoteRepository(db *sql.DB) *NoteRepository {
 	return &NoteRepository{db: db}
+}
+
+func (r *NoteRepository) GetNotesByProject(ctx context.Context, projectID, userID uuid.UUID) ([]models.Note, error) {
+	const op = "NoteRepository.GetNotesByProject"
+	logger := logctx.GetLogger(ctx).WithField("op", op).
+		WithField("projectID", projectID).
+		WithField("userID", userID)
+
+	rows, err := r.db.QueryContext(ctx, getAllNotesByProjectQuery, projectID, userID)
+	if err != nil {
+		logger.WithError(err).Error("failed to get notes by project")
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+	defer rows.Close()
+
+	var notes []models.Note
+	for rows.Next() {
+		var n models.Note
+		err := rows.Scan(&n.ID, &n.ProjectID, &n.UserID, &n.Name, &n.Description, &n.CreatedAt)
+		if err != nil {
+			logger.WithError(err).Error("failed to scan note")
+			return nil, fmt.Errorf("%s: %w", op, err)
+		}
+		notes = append(notes, n)
+	}
+
+	if err = rows.Err(); err != nil {
+		logger.WithError(err).Error("rows iteration error")
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return notes, nil
 }
 
 func (r *NoteRepository) GetAllNotes(ctx context.Context, userID uuid.UUID) ([]models.Note, error) {
@@ -57,7 +100,7 @@ func (r *NoteRepository) GetAllNotes(ctx context.Context, userID uuid.UUID) ([]m
 	var notes []models.Note
 	for rows.Next() {
 		var n models.Note
-		err := rows.Scan(&n.ID, &n.UserID, &n.Name, &n.Description, &n.CreatedAt)
+		err := rows.Scan(&n.ID, &n.ProjectID, &n.UserID, &n.Name, &n.Description, &n.CreatedAt)
 		if err != nil {
 			logger.WithError(err).Error("failed to scan note")
 			return nil, fmt.Errorf("%s: %w", op, err)
@@ -73,13 +116,15 @@ func (r *NoteRepository) GetAllNotes(ctx context.Context, userID uuid.UUID) ([]m
 	return notes, nil
 }
 
-func (r *NoteRepository) CreateNote(ctx context.Context, userID uuid.UUID, name, description string) (uuid.UUID, error) {
+func (r *NoteRepository) CreateNote(ctx context.Context, projectID, userID uuid.UUID, name, description string) (uuid.UUID, error) {
 	const op = "NoteRepository.CreateNote"
 	logger := logctx.GetLogger(ctx).WithField("op", op).
+		WithField("projectID", projectID).
 		WithField("userID", userID)
 
 	newNote := models.Note{
 		ID:          uuid.New(),
+		ProjectID:   projectID,
 		UserID:      userID,
 		Name:        name,
 		Description: description,
@@ -88,7 +133,7 @@ func (r *NoteRepository) CreateNote(ctx context.Context, userID uuid.UUID, name,
 
 	var id uuid.UUID
 	err := r.db.QueryRowContext(ctx, createNoteQuery,
-		newNote.ID, newNote.UserID, newNote.Name, newNote.Description, newNote.CreatedAt).
+		newNote.ID, newNote.ProjectID, newNote.UserID, newNote.Name, newNote.Description, newNote.CreatedAt).
 		Scan(&id)
 
 	if err != nil {
@@ -103,14 +148,15 @@ func (r *NoteRepository) CreateNote(ctx context.Context, userID uuid.UUID, name,
 	return id, nil
 }
 
-func (r *NoteRepository) UpdateNote(ctx context.Context, userID, noteID uuid.UUID, name, description string) error {
+func (r *NoteRepository) UpdateNote(ctx context.Context, userID, noteID, projectID uuid.UUID, name, description string) error {
 	const op = "NoteRepository.UpdateNote"
 	logger := logctx.GetLogger(ctx).WithField("op", op).
 		WithField("userID", userID).
-		WithField("noteID", noteID)
+		WithField("noteID", noteID).
+		WithField("projectID", projectID)
 
 	result, err := r.db.ExecContext(ctx, updateNoteQuery,
-		noteID, userID, name, description)
+		noteID, projectID, userID, name, description)
 
 	if err != nil {
 		logger.WithError(err).Error("failed to update note")

@@ -18,8 +18,14 @@ deps:
 	go mod download
 	go mod tidy
 
+stop:
+	docker compose stop
+
 start:
 	docker compose up --build
+
+start-background:
+	docker compose up --build -d
 
 clear:
 	@echo "Полная очистка приложения и БД..."

@@ -1,4 +1,4 @@
-package models
+package errs
 
 import (
 	"errors"
@@ -13,6 +13,8 @@ var (
 	ErrInvalidCredentials = errors.New("invalid credentials")
 	ErrIsDuplicateKey     = errors.New("user with this login or email already exists")
 	ErrEmptyNoteName      = errors.New("note name cannot be empty")
+	ErrNoAccess           = errors.New("no access to project")
+	ErrNotOwner           = errors.New("user is not project owner")
 )
 
 func NewNotFoundError(msg string) error {

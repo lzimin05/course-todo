@@ -14,9 +14,10 @@ const (
 
 type Task struct {
 	ID          uuid.UUID
+	ProjectID   uuid.UUID
 	UserID      uuid.UUID
 	Title       string
-	Description string 
+	Description string
 	Importance  int
 	Deadline    time.Time
 	CreatedAt   time.Time

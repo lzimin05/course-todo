@@ -14,6 +14,7 @@ import (
 	models "github.com/lzimin05/course-todo/internal/models/task"
 	dto "github.com/lzimin05/course-todo/internal/transport/dto/task"
 	"github.com/lzimin05/course-todo/internal/transport/middleware/logctx"
+	"github.com/lzimin05/course-todo/internal/transport/utils/handler"
 	response "github.com/lzimin05/course-todo/internal/transport/utils/response"
 	validation "github.com/lzimin05/course-todo/internal/transport/utils/validation/task"
 )
@@ -21,6 +22,7 @@ import (
 type TaskUsecase interface {
 	CreateTask(ctx context.Context, req *dto.PostTaskDTO) error
 	GetTasksByUserID(ctx context.Context, userID uuid.UUID) ([]*dto.TaskDTO, error)
+	GetTasksByProjectID(ctx context.Context, projectID uuid.UUID) ([]*dto.TaskDTO, error)
 	UpdateTask(ctx context.Context, title, description string, importance int, deadline time.Time, taskID, userID uuid.UUID) error
 	UpdateTaskStatus(ctx context.Context, status string, taskID, userID uuid.UUID) error
 	DeleteTask(ctx context.Context, taskID, userID uuid.UUID) error
@@ -45,9 +47,10 @@ func New(uc TaskUsecase, cfg *config.Config) *TaskHandler {
 // @Accept       json
 // @Produce      json
 // @Param        task  body  dto.PostTaskDTO  true  "Данные для создания задачи"
-// @Success      200  "Задача создана"
+// @Success      201  "Задача создана"
 // @Failure      400  {object} dto.ErrorResponse "Неверный запрос"
 // @Failure      401  {object} dto.ErrorResponse "Пользователь не авторизован"
+// @Failure      403  {object} dto.ErrorResponse "Нет доступа к проекту"
 // @Failure      500  {object} dto.ErrorResponse "Внутренняя ошибка сервера"
 // @Security     BearerAuth
 // @Router       /todo/create [post]
@@ -57,25 +60,19 @@ func (h *TaskHandler) CreateTask(w http.ResponseWriter, r *http.Request) {
 
 	var req dto.PostTaskDTO
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		logger.WithError(err).Warn("failed to decode task")
-		response.SendError(r.Context(), w, http.StatusBadRequest, "Invailid request")
+		logger.WithError(err).Warn("failed to decode task data")
+		response.SendError(r.Context(), w, http.StatusBadRequest, "Invalid request")
 		return
 	}
 
-	err := validation.ValidationTask(req.Title, req.Importance, req.Deadline)
-	if err != nil {
-		logger.Warn("valitationTask error: ", err.Error())
-		response.SendError(r.Context(), w, http.StatusBadRequest, err.Error())
-		return
-	}
-
-	err = h.uc.CreateTask(r.Context(), &req)
+	err := h.uc.CreateTask(r.Context(), &req)
 	if err != nil {
 		logger.WithError(err).Error("failed to create task")
-		response.SendError(r.Context(), w, http.StatusInternalServerError, "Failed to create task")
+		handler.HandleError(r.Context(), w, err, "Failed to create task")
 		return
 	}
-	response.SendJSONResponse(r.Context(), w, http.StatusOK, nil)
+
+	response.SendJSONResponse(r.Context(), w, http.StatusCreated, nil)
 }
 
 // GetTasksByUserID получает все задачи пользователя
@@ -110,6 +107,40 @@ func (h *TaskHandler) GetTasksByUserID(w http.ResponseWriter, r *http.Request) {
 		response.SendError(r.Context(), w, http.StatusInternalServerError, "failed to get tasks")
 		return
 	}
+	response.SendJSONResponse(r.Context(), w, http.StatusOK, tasks)
+}
+
+// GetTasksByProjectID получает все задачи проекта
+// @Summary      Получить задачи проекта
+// @Description  Возвращает список всех задач указанного проекта
+// @Tags         tasks
+// @Produce      json
+// @Param        projectId  path  string  true  "ID проекта"
+// @Success      200  {array}  dto.TaskDTO "Список задач"
+// @Failure      400  {object} dto.ErrorResponse "Неверный запрос"
+// @Failure      401  {object} dto.ErrorResponse "Пользователь не авторизован"
+// @Failure      403  {object} dto.ErrorResponse "Нет доступа к проекту"
+// @Failure      500  {object} dto.ErrorResponse "Внутренняя ошибка сервера"
+// @Security     BearerAuth
+// @Router       /projects/{projectId}/tasks [get]
+func (h *TaskHandler) GetTasksByProjectID(w http.ResponseWriter, r *http.Request) {
+	const op = "TaskHandler.GetTasksByProjectID"
+	logger := logctx.GetLogger(r.Context()).WithField("op", op)
+
+	projectID, err := uuid.Parse(mux.Vars(r)["projectId"])
+	if err != nil {
+		logger.WithError(err).Warn("invalid project ID")
+		response.SendError(r.Context(), w, http.StatusBadRequest, "Invalid project ID")
+		return
+	}
+
+	tasks, err := h.uc.GetTasksByProjectID(r.Context(), projectID)
+	if err != nil {
+		logger.WithError(err).Error("failed to get tasks by project")
+		handler.HandleError(r.Context(), w, err, "Failed to get tasks")
+		return
+	}
+
 	response.SendJSONResponse(r.Context(), w, http.StatusOK, tasks)
 }
 

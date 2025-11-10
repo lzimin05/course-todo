@@ -21,7 +21,6 @@ import (
 // @securityDefinitions.apikey BearerAuth
 // @in header
 // @name Authorization
-
 func main() {
 	conf, err := config.NewConfig()
 	if err != nil {
