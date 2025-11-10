@@ -23,6 +23,7 @@ type ProjectUsecase interface {
 	DeleteProject(ctx context.Context, projectID uuid.UUID) error
 	RemoveProjectMember(ctx context.Context, projectID, memberUserID uuid.UUID) error
 	UpdateProject(ctx context.Context, projectID uuid.UUID, req *dto.UpdateProjectDTO) (*dto.ProjectDTO, error)
+	LeaveProject(ctx context.Context, projectID uuid.UUID) error
 }
 
 type ProjectHandler struct {
@@ -37,6 +38,7 @@ func New(uc ProjectUsecase, cfg *config.Config) *ProjectHandler {
 	}
 }
 
+// handleError обрабатывает ошибки и возвращает соответствующий HTTP статус
 // CreateProject создает новый проект
 // @Summary      Создать новый проект
 // @Description  Создает новый проект для текущего пользователя
@@ -341,4 +343,39 @@ func (h *ProjectHandler) UpdateProject(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response.SendJSONResponse(r.Context(), w, http.StatusOK, project)
+}
+
+// LeaveProject позволяет пользователю покинуть проект
+// @Summary      Покинуть проект
+// @Description  Позволяет участнику покинуть проект (владелец не может покинуть проект)
+// @Tags         projects
+// @Produce      json
+// @Param        projectId  path  string  true  "ID проекта"
+// @Success      200  "Пользователь покинул проект"
+// @Failure      400  {object} dto.ErrorResponse "Неверный запрос"
+// @Failure      401  {object} dto.ErrorResponse "Пользователь не авторизован"
+// @Failure      403  {object} dto.ErrorResponse "Недостаточно прав или владелец не может покинуть проект"
+// @Failure      404  {object} dto.ErrorResponse "Проект не найден"
+// @Failure      500  {object} dto.ErrorResponse "Внутренняя ошибка сервера"
+// @Security     BearerAuth
+// @Router       /projects/{projectId}/leave [post]
+func (h *ProjectHandler) LeaveProject(w http.ResponseWriter, r *http.Request) {
+	const op = "ProjectHandler.LeaveProject"
+	logger := logctx.GetLogger(r.Context()).WithField("op", op)
+
+	projectID, err := uuid.Parse(mux.Vars(r)["projectId"])
+	if err != nil {
+		logger.WithError(err).Warn("invalid project ID")
+		response.SendError(r.Context(), w, http.StatusBadRequest, "Invalid project ID")
+		return
+	}
+
+	err = h.uc.LeaveProject(r.Context(), projectID)
+	if err != nil {
+		logger.WithError(err).Error("failed to leave project")
+		handler.HandleError(r.Context(), w, err, "Failed to leave project")
+		return
+	}
+
+	response.SendJSONResponse(r.Context(), w, http.StatusOK, nil)
 }
