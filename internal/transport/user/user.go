@@ -10,6 +10,7 @@ import (
 	"github.com/lzimin05/course-todo/internal/transport/utils/response"
 )
 
+//go:generate mockgen -source=user.go -destination=../../usecase/mocks/user_usecase_mock.go -package=mocks IUserUsecase
 type IUserUsecase interface {
 	GetMe(context.Context) (*dto.UserDTO, error)
 	GetUserByEmail(context.Context, string) (*dto.UserDTO, error)

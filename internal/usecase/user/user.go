@@ -10,17 +10,18 @@ import (
 	"github.com/lzimin05/course-todo/internal/usecase/helpers"
 )
 
-type IUserRepository interface {
+//go:generate mockgen -source=user.go -destination=../mocks/user_mocks.go -package=mocks UserRepository
+type UserRepository interface {
 	GetUserByID(context.Context, uuid.UUID) (*models.User, error)
 	GetUserByEmail(context.Context, string) (*models.User, error)
 	GetUserByLogin(context.Context, string) (*models.User, error)
 }
 
 type UserUsecase struct {
-	repo IUserRepository
+	repo UserRepository
 }
 
-func New(repo IUserRepository) *UserUsecase {
+func New(repo UserRepository) *UserUsecase {
 	return &UserUsecase{
 		repo: repo,
 	}

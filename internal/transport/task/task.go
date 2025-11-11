@@ -19,6 +19,7 @@ import (
 	validation "github.com/lzimin05/course-todo/internal/transport/utils/validation/task"
 )
 
+//go:generate mockgen -source=task.go -destination=../../usecase/mocks/task_usecase_mock.go -package=mocks TaskUsecase
 type TaskUsecase interface {
 	CreateTask(ctx context.Context, req *dto.PostTaskDTO) error
 	GetTasksByUserID(ctx context.Context, userID uuid.UUID) ([]*dto.TaskDTO, error)
