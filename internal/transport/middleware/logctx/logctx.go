@@ -19,3 +19,7 @@ func GetLogger(ctx context.Context) *logrus.Entry {
 
 	return logrus.NewEntry(logrus.New())
 }
+
+func NewLogger() *logrus.Entry {
+	return logrus.NewEntry(logrus.New())
+}

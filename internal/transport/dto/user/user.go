@@ -9,3 +9,7 @@ type UserDTO struct {
 	Email        string    `json:"email"`
 	PasswordHash []byte    `json:"-"`
 }
+
+type UpdateUsernameRequest struct {
+	Username string `json:"username"`
+}

@@ -12,6 +12,7 @@ import (
 	"github.com/lzimin05/course-todo/internal/usecase/helpers"
 )
 
+//go:generate mockgen -source=note.go -destination=../mocks/note_mocks.go -package=mocks INoteRepository,NoteProjectRepository
 type INoteRepository interface {
 	GetAllNotes(ctx context.Context, userID uuid.UUID) ([]models.Note, error)
 	GetNotesByProject(ctx context.Context, projectID, userID uuid.UUID) ([]models.Note, error)
@@ -20,16 +21,16 @@ type INoteRepository interface {
 	DeleteNote(ctx context.Context, userID, noteID uuid.UUID) error
 }
 
-type ProjectRepository interface {
+type NoteProjectRepository interface {
 	CheckProjectAccess(ctx context.Context, projectID, userID uuid.UUID) (bool, error)
 }
 
 type NoteUsecase struct {
 	repo        INoteRepository
-	projectRepo ProjectRepository
+	projectRepo NoteProjectRepository
 }
 
-func NewNoteUsecase(repo INoteRepository, projectRepo ProjectRepository) *NoteUsecase {
+func NewNoteUsecase(repo INoteRepository, projectRepo NoteProjectRepository) *NoteUsecase {
 	return &NoteUsecase{
 		repo:        repo,
 		projectRepo: projectRepo,
