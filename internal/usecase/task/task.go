@@ -12,6 +12,7 @@ import (
 	"github.com/lzimin05/course-todo/internal/usecase/helpers"
 )
 
+//go:generate mockgen -source=task.go -destination=../mocks/task_mocks.go -package=mocks TaskRepository,TaskProjectRepository
 type TaskRepository interface {
 	CreateTask(ctx context.Context, task *models.Task) (*models.Task, error)
 	GetTasksByUserID(ctx context.Context, userID uuid.UUID) ([]*models.Task, error)
@@ -21,16 +22,16 @@ type TaskRepository interface {
 	DeleteTask(ctx context.Context, taskID, userID uuid.UUID) error
 }
 
-type ProjectRepository interface {
+type TaskProjectRepository interface {
 	CheckProjectAccess(ctx context.Context, projectID, userID uuid.UUID) (bool, error)
 }
 
 type TaskUsecase struct {
 	repo        TaskRepository
-	projectRepo ProjectRepository
+	projectRepo TaskProjectRepository
 }
 
-func New(repo TaskRepository, projectRepo ProjectRepository) *TaskUsecase {
+func New(repo TaskRepository, projectRepo TaskProjectRepository) *TaskUsecase {
 	return &TaskUsecase{
 		repo:        repo,
 		projectRepo: projectRepo,
