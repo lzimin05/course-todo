@@ -80,3 +80,17 @@ func (mr *MockUserRepositoryMockRecorder) GetUserByLogin(arg0, arg1 interface{})
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserByLogin", reflect.TypeOf((*MockUserRepository)(nil).GetUserByLogin), arg0, arg1)
 }
+
+// UpdateUsername mocks base method.
+func (m *MockUserRepository) UpdateUsername(arg0 context.Context, arg1 uuid.UUID, arg2 string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateUsername", arg0, arg1, arg2)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdateUsername indicates an expected call of UpdateUsername.
+func (mr *MockUserRepositoryMockRecorder) UpdateUsername(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateUsername", reflect.TypeOf((*MockUserRepository)(nil).UpdateUsername), arg0, arg1, arg2)
+}

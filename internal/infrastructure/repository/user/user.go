@@ -41,6 +41,11 @@ const (
 		u.password_hash
 	FROM todo.user u
 	WHERE u.login = $1;`
+
+	queryUpdateUsername = `
+		UPDATE todo.user 
+		SET username = $2 
+		WHERE id = $1`
 )
 
 type UserRepository struct {
@@ -121,4 +126,28 @@ func (r *UserRepository) GetUserByLogin(ctx context.Context, login string) (*mod
 	}
 
 	return &user, nil
+}
+
+func (r *UserRepository) UpdateUsername(ctx context.Context, userID uuid.UUID, username string) error {
+	const op = "UserRepository.UpdateUsername"
+	logger := logctx.GetLogger(ctx).WithField("op", op).WithField("userID", userID)
+
+	result, err := r.db.ExecContext(ctx, queryUpdateUsername, userID, username)
+	if err != nil {
+		logger.WithError(err).Error("failed to update username")
+		return err
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		logger.WithError(err).Error("failed to get rows affected")
+		return err
+	}
+
+	if rowsAffected == 0 {
+		logger.Warn("user not found")
+		return errs.ErrInvalidCredentials
+	}
+
+	return nil
 }

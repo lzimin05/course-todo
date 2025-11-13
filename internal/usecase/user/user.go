@@ -15,6 +15,7 @@ type UserRepository interface {
 	GetUserByID(context.Context, uuid.UUID) (*models.User, error)
 	GetUserByEmail(context.Context, string) (*models.User, error)
 	GetUserByLogin(context.Context, string) (*models.User, error)
+	UpdateUsername(context.Context, uuid.UUID, string) error
 }
 
 type UserUsecase struct {
@@ -91,4 +92,24 @@ func (u *UserUsecase) GetUserByLogin(ctx context.Context, login string) (*dto.Us
 	}
 
 	return userDTO, nil
+}
+
+func (u *UserUsecase) UpdateUsername(ctx context.Context, username string) error {
+	const op = "UserUsecase.UpdateUsername"
+	logger := logctx.GetLogger(ctx).WithField("op", op)
+
+	userID, err := helpers.GetUserIDFromContext(ctx)
+	if err != nil {
+		logger.WithError(err).Error("invalid user ID format")
+		return err
+	}
+
+	err = u.repo.UpdateUsername(ctx, userID, username)
+	if err != nil {
+		logger.WithError(err).Error("failed to update username in repository")
+		return err
+	}
+
+	logger.Info("username updated successfully")
+	return nil
 }

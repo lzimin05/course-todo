@@ -2,12 +2,14 @@ package transport
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 
 	"github.com/lzimin05/course-todo/config"
 	dto "github.com/lzimin05/course-todo/internal/transport/dto/user"
 	"github.com/lzimin05/course-todo/internal/transport/middleware/logctx"
 	"github.com/lzimin05/course-todo/internal/transport/utils/response"
+	validation "github.com/lzimin05/course-todo/internal/transport/utils/validation/user"
 )
 
 //go:generate mockgen -source=user.go -destination=../../usecase/mocks/user_usecase_mock.go -package=mocks IUserUsecase
@@ -15,6 +17,7 @@ type IUserUsecase interface {
 	GetMe(context.Context) (*dto.UserDTO, error)
 	GetUserByEmail(context.Context, string) (*dto.UserDTO, error)
 	GetUserByLogin(context.Context, string) (*dto.UserDTO, error)
+	UpdateUsername(context.Context, string) error
 }
 
 type UserHandler struct {
@@ -115,4 +118,44 @@ func (h *UserHandler) GetUserByLogin(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response.SendJSONResponse(r.Context(), w, http.StatusOK, user)
+}
+
+// UpdateUsername обновляет имя пользователя
+// @Summary      Обновить имя пользователя
+// @Description  Обновляет имя пользователя для текущего авторизованного пользователя
+// @Tags         user
+// @Accept       json
+// @Produce      json
+// @Param        request body dto.UpdateUsernameRequest true "Новое имя пользователя"
+// @Success      200  "Имя пользователя обновлено"
+// @Failure      400  {object} dto.ErrorResponse "Неверный запрос"
+// @Failure      401  {object} dto.ErrorResponse "Пользователь не авторизован"
+// @Security     BearerAuth
+// @Router       /users/username [patch]
+func (h *UserHandler) UpdateUsername(w http.ResponseWriter, r *http.Request) {
+	const op = "UserHandler.UpdateUsername"
+	logger := logctx.GetLogger(r.Context()).WithField("op", op)
+
+	var req dto.UpdateUsernameRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		logger.WithError(err).Warn("failed to decode request")
+		response.SendError(r.Context(), w, http.StatusBadRequest, "invalid JSON")
+		return
+	}
+
+	// Валидация запроса
+	if err := validation.ValidateUpdateUsernameRequest(req); err != nil {
+		logger.WithError(err).Warn("validation failed")
+		response.SendError(r.Context(), w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	err := h.uc.UpdateUsername(r.Context(), req.Username)
+	if err != nil {
+		logger.WithError(err).Error("failed to update username")
+		response.SendError(r.Context(), w, http.StatusInternalServerError, "failed to update username")
+		return
+	}
+
+	response.SendJSONResponse(r.Context(), w, http.StatusOK, nil)
 }

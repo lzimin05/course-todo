@@ -115,6 +115,9 @@ func NewApp(conf *config.Config) (*App, error) {
 		userRouter.Handle("/by-login",
 			middleware.AuthMiddleware(tokenator)(http.HandlerFunc(userHandler.GetUserByLogin)),
 		).Methods(http.MethodGet)
+		userRouter.Handle("/username",
+			middleware.AuthMiddleware(tokenator)(http.HandlerFunc(userHandler.UpdateUsername)),
+		).Methods(http.MethodPatch)
 	}
 
 	taskRepository := taskRepo.New(db)

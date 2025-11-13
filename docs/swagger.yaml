@@ -146,6 +146,11 @@ definitions:
     required:
     - name
     type: object
+  dto.UpdateUsernameRequest:
+    properties:
+      username:
+        type: string
+    type: object
   dto.UserDTO:
     properties:
       email:
@@ -1063,6 +1068,36 @@ paths:
       security:
       - BearerAuth: []
       summary: Получить информацию о текущем пользователе
+      tags:
+      - user
+  /users/username:
+    patch:
+      consumes:
+      - application/json
+      description: Обновляет имя пользователя для текущего авторизованного пользователя
+      parameters:
+      - description: Новое имя пользователя
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateUsernameRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Имя пользователя обновлено
+        "400":
+          description: Неверный запрос
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "401":
+          description: Пользователь не авторизован
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Обновить имя пользователя
       tags:
       - user
 securityDefinitions:
