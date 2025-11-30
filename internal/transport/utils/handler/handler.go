@@ -15,6 +15,8 @@ func HandleError(ctx context.Context, w http.ResponseWriter, err error, defaultM
 		response.SendError(ctx, w, http.StatusForbidden, "Access denied")
 	case errors.Is(err, errs.ErrNotOwner):
 		response.SendError(ctx, w, http.StatusForbidden, "Insufficient permissions")
+	case errors.Is(err, errs.ErrCannotAddSelf):
+		response.SendError(ctx, w, http.StatusBadRequest, "Cannot add yourself as project member")
 	case errors.Is(err, errs.ErrOwnerCannotLeave):
 		response.SendError(ctx, w, http.StatusForbidden, "Project owner cannot leave project")
 	case errors.Is(err, errs.ErrNotFound):
