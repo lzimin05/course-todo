@@ -36,6 +36,14 @@ func AuthMiddleware(tokenator *jwt.Tokenator, redisRepo *redis.AuthRepository) f
 					return
 				}
 				if blacklisted {
+					http.SetCookie(w, &http.Cookie{
+						Name:     domains.TokenCookieName,
+						Value:    "",
+						Path:     "/",
+						MaxAge:   -1,
+						HttpOnly: true,
+					})
+
 					response.SendError(r.Context(), w, http.StatusUnauthorized, "Token is blacklisted")
 					return
 				}
