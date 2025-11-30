@@ -100,20 +100,20 @@ func NewApp(conf *config.Config) (*App, error) {
 		authRouter.HandleFunc("/login", authHandler.Login).Methods(http.MethodPost)
 		authRouter.HandleFunc("/register", authHandler.Register).Methods(http.MethodPost)
 		authRouter.Handle("/logout",
-			middleware.AuthMiddleware(tokenator)(http.HandlerFunc(authHandler.Logout)),
+			middleware.AuthMiddleware(tokenator, redisAuthRepo)(http.HandlerFunc(authHandler.Logout)),
 		).Methods(http.MethodPost)
 	}
 
 	userRouter := apiRouter.PathPrefix("/users").Subrouter()
 	{
 		userRouter.Handle("/me",
-			middleware.AuthMiddleware(tokenator)(http.HandlerFunc(userHandler.GetMe)),
+			middleware.AuthMiddleware(tokenator, redisAuthRepo)(http.HandlerFunc(userHandler.GetMe)),
 		).Methods(http.MethodGet)
 		userRouter.Handle("/by-email",
-			middleware.AuthMiddleware(tokenator)(http.HandlerFunc(userHandler.GetUserByEmail)),
+			middleware.AuthMiddleware(tokenator, redisAuthRepo)(http.HandlerFunc(userHandler.GetUserByEmail)),
 		).Methods(http.MethodGet)
 		userRouter.Handle("/by-login",
-			middleware.AuthMiddleware(tokenator)(http.HandlerFunc(userHandler.GetUserByLogin)),
+			middleware.AuthMiddleware(tokenator, redisAuthRepo)(http.HandlerFunc(userHandler.GetUserByLogin)),
 		).Methods(http.MethodGet)
 	}
 
@@ -124,76 +124,76 @@ func NewApp(conf *config.Config) (*App, error) {
 	taskRouter := apiRouter.PathPrefix("/todo").Subrouter()
 	{
 		taskRouter.Handle("/create",
-			middleware.AuthMiddleware(tokenator)(http.HandlerFunc(taskHandler.CreateTask)),
+			middleware.AuthMiddleware(tokenator, redisAuthRepo)(http.HandlerFunc(taskHandler.CreateTask)),
 		).Methods(http.MethodPost)
 		taskRouter.Handle("/all",
-			middleware.AuthMiddleware(tokenator)(http.HandlerFunc(taskHandler.GetTasksByUserID)),
+			middleware.AuthMiddleware(tokenator, redisAuthRepo)(http.HandlerFunc(taskHandler.GetTasksByUserID)),
 		).Methods(http.MethodGet)
 		taskRouter.Handle("/{taskId}/edit",
-			middleware.AuthMiddleware(tokenator)(http.HandlerFunc(taskHandler.UpdateTask)),
+			middleware.AuthMiddleware(tokenator, redisAuthRepo)(http.HandlerFunc(taskHandler.UpdateTask)),
 		).Methods(http.MethodPut)
 		taskRouter.Handle("/{taskId}/edit",
-			middleware.AuthMiddleware(tokenator)(http.HandlerFunc(taskHandler.UpdateTaskStatus)),
+			middleware.AuthMiddleware(tokenator, redisAuthRepo)(http.HandlerFunc(taskHandler.UpdateTaskStatus)),
 		).Methods(http.MethodPatch)
 		taskRouter.Handle("/{taskId}",
-			middleware.AuthMiddleware(tokenator)(http.HandlerFunc(taskHandler.DeleteTask)),
+			middleware.AuthMiddleware(tokenator, redisAuthRepo)(http.HandlerFunc(taskHandler.DeleteTask)),
 		).Methods(http.MethodDelete)
 	}
 
 	noteRouter := apiRouter.PathPrefix("/notes").Subrouter()
 	{
 		noteRouter.Handle("/all",
-			middleware.AuthMiddleware(tokenator)(http.HandlerFunc(noteHandler.GetAllNotes)),
+			middleware.AuthMiddleware(tokenator, redisAuthRepo)(http.HandlerFunc(noteHandler.GetAllNotes)),
 		).Methods(http.MethodGet)
 		noteRouter.Handle("/create",
-			middleware.AuthMiddleware(tokenator)(http.HandlerFunc(noteHandler.CreateNote)),
+			middleware.AuthMiddleware(tokenator, redisAuthRepo)(http.HandlerFunc(noteHandler.CreateNote)),
 		).Methods(http.MethodPost)
 		noteRouter.Handle("/{noteId}/edit",
-			middleware.AuthMiddleware(tokenator)(http.HandlerFunc(noteHandler.UpdateNote)),
+			middleware.AuthMiddleware(tokenator, redisAuthRepo)(http.HandlerFunc(noteHandler.UpdateNote)),
 		).Methods(http.MethodPut)
 		noteRouter.Handle("/{noteId}",
-			middleware.AuthMiddleware(tokenator)(http.HandlerFunc(noteHandler.DeleteNote)),
+			middleware.AuthMiddleware(tokenator, redisAuthRepo)(http.HandlerFunc(noteHandler.DeleteNote)),
 		).Methods(http.MethodDelete)
 	}
 
 	projectRouter := apiRouter.PathPrefix("/projects").Subrouter()
 	{
 		projectRouter.Handle("",
-			middleware.AuthMiddleware(tokenator)(http.HandlerFunc(projectHandler.CreateProject)),
+			middleware.AuthMiddleware(tokenator, redisAuthRepo)(http.HandlerFunc(projectHandler.CreateProject)),
 		).Methods(http.MethodPost)
 		projectRouter.Handle("",
-			middleware.AuthMiddleware(tokenator)(http.HandlerFunc(projectHandler.GetUserProjects)),
+			middleware.AuthMiddleware(tokenator, redisAuthRepo)(http.HandlerFunc(projectHandler.GetUserProjects)),
 		).Methods(http.MethodGet)
 		projectRouter.Handle("/{projectId}",
-			middleware.AuthMiddleware(tokenator)(http.HandlerFunc(projectHandler.GetProjectByID)),
+			middleware.AuthMiddleware(tokenator, redisAuthRepo)(http.HandlerFunc(projectHandler.GetProjectByID)),
 		).Methods(http.MethodGet)
 		projectRouter.Handle("/{projectId}",
-			middleware.AuthMiddleware(tokenator)(http.HandlerFunc(projectHandler.UpdateProject)),
+			middleware.AuthMiddleware(tokenator, redisAuthRepo)(http.HandlerFunc(projectHandler.UpdateProject)),
 		).Methods(http.MethodPut)
 		projectRouter.Handle("/{projectId}",
-			middleware.AuthMiddleware(tokenator)(http.HandlerFunc(projectHandler.DeleteProject)),
+			middleware.AuthMiddleware(tokenator, redisAuthRepo)(http.HandlerFunc(projectHandler.DeleteProject)),
 		).Methods(http.MethodDelete)
 
 		// Управление участниками
 		projectRouter.Handle("/{projectId}/members",
-			middleware.AuthMiddleware(tokenator)(http.HandlerFunc(projectHandler.AddProjectMember)),
+			middleware.AuthMiddleware(tokenator, redisAuthRepo)(http.HandlerFunc(projectHandler.AddProjectMember)),
 		).Methods(http.MethodPost)
 		projectRouter.Handle("/{projectId}/members",
-			middleware.AuthMiddleware(tokenator)(http.HandlerFunc(projectHandler.GetProjectMembers)),
+			middleware.AuthMiddleware(tokenator, redisAuthRepo)(http.HandlerFunc(projectHandler.GetProjectMembers)),
 		).Methods(http.MethodGet)
 		projectRouter.Handle("/{projectId}/members/{userId}",
-			middleware.AuthMiddleware(tokenator)(http.HandlerFunc(projectHandler.RemoveProjectMember)),
+			middleware.AuthMiddleware(tokenator, redisAuthRepo)(http.HandlerFunc(projectHandler.RemoveProjectMember)),
 		).Methods(http.MethodDelete)
 		projectRouter.Handle("/{projectId}/leave",
-			middleware.AuthMiddleware(tokenator)(http.HandlerFunc(projectHandler.LeaveProject)),
+			middleware.AuthMiddleware(tokenator, redisAuthRepo)(http.HandlerFunc(projectHandler.LeaveProject)),
 		).Methods(http.MethodPost)
 
 		// Задачи и заметки проекта
 		projectRouter.Handle("/{projectId}/tasks",
-			middleware.AuthMiddleware(tokenator)(http.HandlerFunc(taskHandler.GetTasksByProjectID)),
+			middleware.AuthMiddleware(tokenator, redisAuthRepo)(http.HandlerFunc(taskHandler.GetTasksByProjectID)),
 		).Methods(http.MethodGet)
 		projectRouter.Handle("/{projectId}/notes",
-			middleware.AuthMiddleware(tokenator)(http.HandlerFunc(noteHandler.GetNotesByProject)),
+			middleware.AuthMiddleware(tokenator, redisAuthRepo)(http.HandlerFunc(noteHandler.GetNotesByProject)),
 		).Methods(http.MethodGet)
 	}
 
