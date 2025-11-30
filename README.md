@@ -176,4 +176,8 @@ make stop
 make start-background
 make start
 make clear
+make generate-mocks
+make test
+make test-coverage
+make test-coverage-html
 ```

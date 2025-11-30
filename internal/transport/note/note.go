@@ -14,6 +14,7 @@ import (
 	"github.com/lzimin05/course-todo/internal/transport/utils/response"
 )
 
+//go:generate mockgen -source=note.go -destination=../../usecase/mocks/note_usecase_mock.go -package=mocks INoteUsecase
 type INoteUsecase interface {
 	GetAllNotes(ctx context.Context) ([]*dto.NoteDTO, error)
 	GetNotesByProject(ctx context.Context, projectID uuid.UUID) ([]*dto.NoteDTO, error)

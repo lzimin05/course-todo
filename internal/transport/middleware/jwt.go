@@ -42,9 +42,7 @@ func AuthMiddleware(tokenator *jwt.Tokenator, redisRepo *redis.AuthRepository) f
 			}
 
 			// Добавляем данные в контекст
-			ctx := context.WithValue(r.Context(), domains.UserIDKey{}, claims.UserID)
-
-			// Передаем запрос дальше
+			ctx := context.WithValue(r.Context(), domains.UserIDKey{}, claims.UserID) // Передаем запрос дальше
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}

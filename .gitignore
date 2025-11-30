@@ -1,1 +1,26 @@
+
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test binary, built with `go test -c`
+*.test
+
+# Code coverage profiles and other test artifacts
+*.out
+coverage.*
+coverage*.out
+*.coverprofile
+profile.cov
+
+go.work
+go.work.sum
+
+# env file
 .env
+
+# Editor/IDE
+.idea/
+.vscode/

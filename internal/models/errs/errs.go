@@ -16,6 +16,7 @@ var (
 	ErrNoAccess           = errors.New("no access to project")
 	ErrNotOwner           = errors.New("user is not project owner")
 	ErrOwnerCannotLeave   = errors.New("project owner cannot leave project")
+	ErrTaskNotFound       = errors.New("task not found")
 )
 
 func NewNotFoundError(msg string) error {

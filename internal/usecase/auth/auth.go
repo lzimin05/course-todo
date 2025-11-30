@@ -14,6 +14,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+//go:generate mockgen -source=auth.go -destination=../mocks/auth_mocks.go -package=mocks ITokenator,AuthRepository,IAuthRedisRepository,ProjectRepository
 type ITokenator interface {
 	CreateJWT(userID string) (string, error)
 	ParseJWT(tokenString string) (*jwt.JWTClaims, error)
