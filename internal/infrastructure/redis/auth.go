@@ -1,12 +1,13 @@
 package redis
 
-import(
+import (
 	"context"
 	"fmt"
 	"time"
-	
+
 	"github.com/lzimin05/course-todo/config"
 )
+
 const (
 	userTokensPrefix = "user_id:"
 )
@@ -39,4 +40,16 @@ func (r *AuthRepository) AddToBlacklist(ctx context.Context, userID, token strin
 	}
 
 	return nil
+}
+
+// IsBlacklisted проверяет, находится ли токен в черном списке пользователя
+func (r *AuthRepository) IsBlacklisted(ctx context.Context, userID, token string) (bool, error) {
+	userKey := fmt.Sprintf("%s%s", userTokensPrefix, userID)
+
+	isMember, err := r.client.SIsMember(ctx, userKey, token).Result()
+	if err != nil {
+		return false, fmt.Errorf("failed to check token in user's blacklist: %w", err)
+	}
+
+	return isMember, nil
 }

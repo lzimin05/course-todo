@@ -152,6 +152,12 @@ func (uc *ProjectUsecase) AddProjectMember(ctx context.Context, projectID uuid.U
 		return errs.ErrNotOwner
 	}
 
+	// Нельзя добавить самого себя в качестве участника
+	if req.UserID == userID {
+		logger.Warn("attempt to add self to project")
+		return errs.ErrCannotAddSelf
+	}
+
 	err = uc.repo.AddProjectMember(ctx, projectID, req.UserID)
 	if err != nil {
 		logger.WithError(err).Error("failed to add project member")

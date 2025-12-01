@@ -17,6 +17,7 @@ var (
 	ErrNotOwner           = errors.New("user is not project owner")
 	ErrOwnerCannotLeave   = errors.New("project owner cannot leave project")
 	ErrTaskNotFound       = errors.New("task not found")
+	ErrCannotAddSelf      = errors.New("cannot add yourself as project member")
 )
 
 func NewNotFoundError(msg string) error {

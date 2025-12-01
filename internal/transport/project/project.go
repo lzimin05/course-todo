@@ -12,6 +12,7 @@ import (
 	"github.com/lzimin05/course-todo/internal/transport/middleware/logctx"
 	"github.com/lzimin05/course-todo/internal/transport/utils/handler"
 	response "github.com/lzimin05/course-todo/internal/transport/utils/response"
+	validation "github.com/lzimin05/course-todo/internal/transport/utils/validation/project"
 )
 
 type ProjectUsecase interface {
@@ -63,9 +64,9 @@ func (h *ProjectHandler) CreateProject(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if req.Name == "" {
-		logger.Warn("empty project name")
-		response.SendError(r.Context(), w, http.StatusBadRequest, "Project name is required")
+	if err := validation.ValidationProject(req.Name); err != nil {
+		logger.Warn("project validation failed: ", err.Error())
+		response.SendError(r.Context(), w, http.StatusBadRequest, err.Error())
 		return
 	}
 
@@ -329,9 +330,9 @@ func (h *ProjectHandler) UpdateProject(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if req.Name == "" {
-		logger.Warn("empty project name")
-		response.SendError(r.Context(), w, http.StatusBadRequest, "Project name is required")
+	if err := validation.ValidationProject(req.Name); err != nil {
+		logger.Warn("project validation failed: ", err.Error())
+		response.SendError(r.Context(), w, http.StatusBadRequest, err.Error())
 		return
 	}
 

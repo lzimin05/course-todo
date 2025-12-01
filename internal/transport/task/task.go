@@ -66,6 +66,12 @@ func (h *TaskHandler) CreateTask(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if err := validation.ValidationTask(req.Title, req.Importance, req.Deadline); err != nil {
+		logger.Warn("validation failed: ", err.Error())
+		response.SendError(r.Context(), w, http.StatusBadRequest, err.Error())
+		return
+	}
+
 	err := h.uc.CreateTask(r.Context(), &req)
 	if err != nil {
 		logger.WithError(err).Error("failed to create task")
