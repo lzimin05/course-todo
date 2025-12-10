@@ -23,6 +23,8 @@ type ProjectMember struct {
 	ID        uuid.UUID
 	ProjectID uuid.UUID
 	UserID    uuid.UUID
+	Username  string
+	Email     string
 	Role      string
 	JoinedAt  time.Time
 }

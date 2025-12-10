@@ -25,3 +25,7 @@ type PostTaskDTO struct {
 	Importance  int       `json:"importance" validate:"required, min=1, max=3"`
 	Deadline    time.Time `json:"deadline"`
 }
+
+type CreateTaskDTO struct {
+	ID uuid.UUID `json:"id"`
+}

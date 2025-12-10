@@ -38,26 +38,26 @@ func New(repo TaskRepository, projectRepo TaskProjectRepository) *TaskUsecase {
 	}
 }
 
-func (uc *TaskUsecase) CreateTask(ctx context.Context, req *dto.PostTaskDTO) error {
+func (uc *TaskUsecase) CreateTask(ctx context.Context, req *dto.PostTaskDTO) (*dto.CreateTaskDTO, error) {
 	const op = "TaskUseCase.CreateTask"
 	logger := logctx.GetLogger(ctx).WithField("op", op).WithField("title", req.Title)
 
 	userID, err := helpers.GetUserIDFromContext(ctx)
 	if err != nil {
 		logger.WithError(err).Error("invalid user ID format")
-		return err
+		return nil, err
 	}
 
 	// Проверяем права доступа к проекту
 	hasAccess, err := uc.projectRepo.CheckProjectAccess(ctx, req.ProjectID, userID)
 	if err != nil {
 		logger.WithError(err).Error("failed to check project access")
-		return err
+		return nil, err
 	}
 
 	if !hasAccess {
 		logger.Warn("user doesn't have access to project")
-		return errs.ErrNoAccess
+		return nil, errs.ErrNoAccess
 	}
 
 	newTaskModel := &models.Task{
@@ -75,10 +75,12 @@ func (uc *TaskUsecase) CreateTask(ctx context.Context, req *dto.PostTaskDTO) err
 	_, err = uc.repo.CreateTask(ctx, newTaskModel)
 	if err != nil {
 		logger.WithError(err).Error("failed to create task")
-		return err
+		return nil, err
 	}
 
-	return nil
+	return &dto.CreateTaskDTO{
+		ID: newTaskModel.ID,
+	}, nil
 }
 
 func (uc *TaskUsecase) GetTasksByUserID(ctx context.Context, userID uuid.UUID) ([]*dto.TaskDTO, error) {

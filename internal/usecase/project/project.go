@@ -201,6 +201,8 @@ func (uc *ProjectUsecase) GetProjectMembers(ctx context.Context, projectID uuid.
 			ID:        member.ID,
 			ProjectID: member.ProjectID,
 			UserID:    member.UserID,
+			Username:  member.Username,
+			Email:     member.Email,
 			Role:      member.Role,
 			JoinedAt:  member.JoinedAt,
 		}

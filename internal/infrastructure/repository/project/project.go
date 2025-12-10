@@ -34,8 +34,9 @@ const (
 		RETURNING id, joined_at;`
 
 	queryGetProjectMembers = `
-		SELECT pm.id, pm.project_id,pm.user_id, pm.role, pm.joined_at
+		SELECT pm.id, pm.project_id, pm.user_id, u.username, u.email, pm.role, pm.joined_at
 		FROM todo.project_member pm
+		JOIN todo."user" u ON pm.user_id = u.id
 		WHERE pm.project_id = $1;`
 
 	queryCheckProjectAccess = `
@@ -187,6 +188,8 @@ func (r *ProjectRepository) GetProjectMembers(ctx context.Context, projectID uui
 			&member.ID,
 			&member.ProjectID,
 			&member.UserID,
+			&member.Username,
+			&member.Email,
 			&member.Role,
 			&member.JoinedAt,
 		)
