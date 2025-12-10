@@ -21,7 +21,7 @@ import (
 
 //go:generate mockgen -source=task.go -destination=../../usecase/mocks/task_usecase_mock.go -package=mocks TaskUsecase
 type TaskUsecase interface {
-	CreateTask(ctx context.Context, req *dto.PostTaskDTO) error
+	CreateTask(ctx context.Context, req *dto.PostTaskDTO) (*dto.CreateTaskDTO, error)
 	GetTasksByUserID(ctx context.Context, userID uuid.UUID) ([]*dto.TaskDTO, error)
 	GetTasksByProjectID(ctx context.Context, projectID uuid.UUID) ([]*dto.TaskDTO, error)
 	UpdateTask(ctx context.Context, title, description string, importance int, deadline time.Time, taskID, userID uuid.UUID) error
@@ -79,7 +79,7 @@ func (h *TaskHandler) CreateTask(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response.SendJSONResponse(r.Context(), w, http.StatusCreated, nil)
+	response.SendJSONResponse(r.Context(), w, http.StatusCreated, taskID)
 }
 
 // GetTasksByUserID получает все задачи пользователя
