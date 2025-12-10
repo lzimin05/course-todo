@@ -45,7 +45,7 @@ func TestTaskTransport_CreateTask(t *testing.T) {
 				Deadline:    time.Now().Add(24 * time.Hour),
 			},
 			mockFunc: func() {
-				mockTaskUsecase.EXPECT().CreateTask(gomock.Any(), gomock.Any()).Return(nil)
+				mockTaskUsecase.EXPECT().CreateTask(gomock.Any(), gomock.Any()).Return(&dto.CreateTaskDTO{ID: uuid.New()}, nil)
 			},
 			statusCode: http.StatusCreated,
 			wantErr:    false,

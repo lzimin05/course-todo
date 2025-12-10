@@ -131,7 +131,7 @@ func TestTaskUsecase_CreateTask(t *testing.T) {
 			tt.setupMocks()
 			ctx := tt.setupContext()
 
-			err := uc.CreateTask(ctx, tt.request)
+			_, err := uc.CreateTask(ctx, tt.request)
 
 			if tt.expectedError != nil {
 				assert.Error(t, err)

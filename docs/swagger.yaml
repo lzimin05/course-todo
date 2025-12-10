@@ -23,6 +23,11 @@ definitions:
     required:
     - project_id
     type: object
+  dto.CreateTaskDTO:
+    properties:
+      id:
+        type: string
+    type: object
   dto.ErrorResponse:
     properties:
       message:
@@ -91,6 +96,8 @@ definitions:
     type: object
   dto.ProjectMemberDTO:
     properties:
+      email:
+        type: string
       id:
         type: string
       joined_at:
@@ -100,6 +107,8 @@ definitions:
       role:
         type: string
       user_id:
+        type: string
+      username:
         type: string
     type: object
   dto.RegisterRequest:
@@ -968,6 +977,8 @@ paths:
       responses:
         "201":
           description: Задача создана
+          schema:
+            $ref: '#/definitions/dto.CreateTaskDTO'
         "400":
           description: Неверный запрос
           schema:

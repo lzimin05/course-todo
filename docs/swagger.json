@@ -1097,7 +1097,10 @@
                 ],
                 "responses": {
                     "201": {
-                        "description": "Задача создана"
+                        "description": "Задача создана",
+                        "schema": {
+                            "$ref": "#/definitions/dto.CreateTaskDTO"
+                        }
                     },
                     "400": {
                         "description": "Неверный запрос",
@@ -1505,6 +1508,14 @@
                 }
             }
         },
+        "dto.CreateTaskDTO": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                }
+            }
+        },
         "dto.ErrorResponse": {
             "type": "object",
             "properties": {
@@ -1609,6 +1620,9 @@
         "dto.ProjectMemberDTO": {
             "type": "object",
             "properties": {
+                "email": {
+                    "type": "string"
+                },
                 "id": {
                     "type": "string"
                 },
@@ -1622,6 +1636,9 @@
                     "type": "string"
                 },
                 "user_id": {
+                    "type": "string"
+                },
+                "username": {
                     "type": "string"
                 }
             }

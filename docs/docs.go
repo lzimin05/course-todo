@@ -1103,7 +1103,10 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "201": {
-                        "description": "Задача создана"
+                        "description": "Задача создана",
+                        "schema": {
+                            "$ref": "#/definitions/dto.CreateTaskDTO"
+                        }
                     },
                     "400": {
                         "description": "Неверный запрос",
@@ -1511,6 +1514,14 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.CreateTaskDTO": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                }
+            }
+        },
         "dto.ErrorResponse": {
             "type": "object",
             "properties": {
@@ -1615,6 +1626,9 @@ const docTemplate = `{
         "dto.ProjectMemberDTO": {
             "type": "object",
             "properties": {
+                "email": {
+                    "type": "string"
+                },
                 "id": {
                     "type": "string"
                 },
@@ -1628,6 +1642,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "user_id": {
+                    "type": "string"
+                },
+                "username": {
                     "type": "string"
                 }
             }

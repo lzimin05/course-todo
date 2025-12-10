@@ -38,11 +38,12 @@ func (m *MockTaskUsecase) EXPECT() *MockTaskUsecaseMockRecorder {
 }
 
 // CreateTask mocks base method.
-func (m *MockTaskUsecase) CreateTask(ctx context.Context, req *dto.PostTaskDTO) error {
+func (m *MockTaskUsecase) CreateTask(ctx context.Context, req *dto.PostTaskDTO) (*dto.CreateTaskDTO, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateTask", ctx, req)
-	ret0, _ := ret[0].(error)
-	return ret0
+	ret0, _ := ret[0].(*dto.CreateTaskDTO)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // CreateTask indicates an expected call of CreateTask.

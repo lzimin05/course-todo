@@ -48,7 +48,7 @@ func New(uc TaskUsecase, cfg *config.Config) *TaskHandler {
 // @Accept       json
 // @Produce      json
 // @Param        task  body  dto.PostTaskDTO  true  "Данные для создания задачи"
-// @Success      201  "Задача создана"
+// @Success      201  {object} dto.CreateTaskDTO "Задача создана"
 // @Failure      400  {object} dto.ErrorResponse "Неверный запрос"
 // @Failure      401  {object} dto.ErrorResponse "Пользователь не авторизован"
 // @Failure      403  {object} dto.ErrorResponse "Нет доступа к проекту"
@@ -72,7 +72,7 @@ func (h *TaskHandler) CreateTask(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err := h.uc.CreateTask(r.Context(), &req)
+	taskID, err := h.uc.CreateTask(r.Context(), &req)
 	if err != nil {
 		logger.WithError(err).Error("failed to create task")
 		handler.HandleError(r.Context(), w, err, "Failed to create task")
